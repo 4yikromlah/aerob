@@ -228,6 +228,21 @@ export default function App() {
   // --- NEON SQL DATABASE DYNAMIC FETCHERS & SYNC HANDLERS ---
   useEffect(() => {
     let isMounted = true;
+
+    const fetchSafe = async (url: string) => {
+      try {
+        const res = await fetch(url);
+        if (!res.ok) {
+          console.warn(`[FETCH SAFE] Non-ok response from ${url}: status ${res.status}`);
+          return null;
+        }
+        return await res.json();
+      } catch (err) {
+        console.error(`[FETCH SAFE] Network or parse error for ${url}:`, err);
+        return null;
+      }
+    };
+
     const fetchLiveData = async () => {
       try {
         const [
@@ -247,36 +262,69 @@ export default function App() {
           customSecondaryRes,
           customLogoRes
         ] = await Promise.all([
-          fetch('/api/members').then(r => r.ok ? r.json() : null),
-          fetch('/api/inventory').then(r => r.ok ? r.json() : null),
-          fetch('/api/programs').then(r => r.ok ? r.json() : null),
-          fetch('/api/gallery').then(r => r.ok ? r.json() : null),
-          fetch('/api/news').then(r => r.ok ? r.json() : null),
-          fetch('/api/products').then(r => r.ok ? r.json() : null),
-          fetch('/api/achievements').then(r => r.ok ? r.json() : null),
-          fetch('/api/settings/profile').then(r => r.ok ? r.json() : null),
-          fetch('/api/settings/visimisi').then(r => r.ok ? r.json() : null),
-          fetch('/api/settings/general_info').then(r => r.ok ? r.json() : null),
-          fetch('/api/settings/public_services').then(r => r.ok ? r.json() : null),
-          fetch('/api/settings/background').then(r => r.ok ? r.json() : null),
-          fetch('/api/settings/primary_color').then(r => r.ok ? r.json() : null),
-          fetch('/api/settings/secondary_color').then(r => r.ok ? r.json() : null),
-          fetch('/api/settings/logo').then(r => r.ok ? r.json() : null)
+          fetchSafe('/api/members'),
+          fetchSafe('/api/inventory'),
+          fetchSafe('/api/programs'),
+          fetchSafe('/api/gallery'),
+          fetchSafe('/api/news'),
+          fetchSafe('/api/products'),
+          fetchSafe('/api/achievements'),
+          fetchSafe('/api/settings/profile'),
+          fetchSafe('/api/settings/visimisi'),
+          fetchSafe('/api/settings/general_info'),
+          fetchSafe('/api/settings/public_services'),
+          fetchSafe('/api/settings/background'),
+          fetchSafe('/api/settings/primary_color'),
+          fetchSafe('/api/settings/secondary_color'),
+          fetchSafe('/api/settings/logo')
         ]);
 
         if (!isMounted) return;
 
-        if (Array.isArray(membersRes)) setMembers(membersRes);
-        if (Array.isArray(inventoryRes)) setInventory(inventoryRes);
-        if (Array.isArray(programsRes)) setPrograms(programsRes);
-        if (Array.isArray(galleryRes)) setGallery(galleryRes);
-        if (Array.isArray(newsRes)) setNews(newsRes);
-        if (Array.isArray(productsRes)) setProducts(productsRes);
-        if (Array.isArray(achievementsRes)) setAchievements(achievementsRes);
-        if (summaryRes) setSummary(summaryRes);
-        if (visimisiRes !== null && visimisiRes !== undefined) setVisiMisi(visimisiRes);
-        if (generalInfoRes) setGeneralInfo(generalInfoRes);
-        if (Array.isArray(servicesRes)) setPublicServices(servicesRes);
+        if (Array.isArray(membersRes)) {
+          setMembers(membersRes);
+          localStorage.setItem('robotika_db_members', JSON.stringify(membersRes));
+        }
+        if (Array.isArray(inventoryRes)) {
+          setInventory(inventoryRes);
+          localStorage.setItem('robotika_db_inventory', JSON.stringify(inventoryRes));
+        }
+        if (Array.isArray(programsRes)) {
+          setPrograms(programsRes);
+          localStorage.setItem('robotika_db_programs', JSON.stringify(programsRes));
+        }
+        if (Array.isArray(galleryRes)) {
+          setGallery(galleryRes);
+          localStorage.setItem('robotika_db_gallery', JSON.stringify(galleryRes));
+        }
+        if (Array.isArray(newsRes)) {
+          setNews(newsRes);
+          localStorage.setItem('robotika_db_news', JSON.stringify(newsRes));
+        }
+        if (Array.isArray(productsRes)) {
+          setProducts(productsRes);
+          localStorage.setItem('robotika_db_products', JSON.stringify(productsRes));
+        }
+        if (Array.isArray(achievementsRes)) {
+          setAchievements(achievementsRes);
+          localStorage.setItem('robotika_db_achievements', JSON.stringify(achievementsRes));
+        }
+        if (summaryRes) {
+          setSummary(summaryRes);
+          localStorage.setItem('robotika_db_summary', JSON.stringify(summaryRes));
+        }
+        if (visimisiRes !== null && visimisiRes !== undefined) {
+          setVisiMisi(visimisiRes);
+          localStorage.setItem('robotika_db_visimisi', JSON.stringify(visimisiRes));
+        }
+        if (generalInfoRes) {
+          setGeneralInfo(generalInfoRes);
+          localStorage.setItem('robotika_db_general_info', JSON.stringify(generalInfoRes));
+        }
+        if (Array.isArray(servicesRes)) {
+          setPublicServices(servicesRes);
+          localStorage.setItem('robotika_db_services', JSON.stringify(servicesRes));
+        }
         
         if (customBgRes) {
           setCustomBg(customBgRes);
@@ -341,12 +389,13 @@ export default function App() {
   };
 
   const handleSetMembers = (value: Member[] | ((prev: Member[]) => Member[])) => {
-    setMembers(prev => {
-      const nextList = typeof value === 'function' ? value(prev) : value;
-      localStorage.setItem('robotika_db_members', JSON.stringify(nextList));
-      syncMembers(prev, nextList);
-      return nextList;
-    });
+    const prevList = members;
+    const nextList = typeof value === 'function' ? value(prevList) : value;
+    setMembers(nextList);
+    localStorage.setItem('robotika_db_members', JSON.stringify(nextList));
+    setTimeout(() => {
+      syncMembers(prevList, nextList);
+    }, 0);
   };
 
   const syncInventory = async (prevList: InventoryItem[], nextList: InventoryItem[]) => {
@@ -382,12 +431,13 @@ export default function App() {
   };
 
   const handleSetInventory = (value: InventoryItem[] | ((prev: InventoryItem[]) => InventoryItem[])) => {
-    setInventory(prev => {
-      const nextList = typeof value === 'function' ? value(prev) : value;
-      localStorage.setItem('robotika_db_inventory', JSON.stringify(nextList));
-      syncInventory(prev, nextList);
-      return nextList;
-    });
+    const prevList = inventory;
+    const nextList = typeof value === 'function' ? value(prevList) : value;
+    setInventory(nextList);
+    localStorage.setItem('robotika_db_inventory', JSON.stringify(nextList));
+    setTimeout(() => {
+      syncInventory(prevList, nextList);
+    }, 0);
   };
 
   const syncPrograms = async (prevList: Program[], nextList: Program[]) => {
@@ -423,12 +473,13 @@ export default function App() {
   };
 
   const handleSetPrograms = (value: Program[] | ((prev: Program[]) => Program[])) => {
-    setPrograms(prev => {
-      const nextList = typeof value === 'function' ? value(prev) : value;
-      localStorage.setItem('robotika_db_programs', JSON.stringify(nextList));
-      syncPrograms(prev, nextList);
-      return nextList;
-    });
+    const prevList = programs;
+    const nextList = typeof value === 'function' ? value(prevList) : value;
+    setPrograms(nextList);
+    localStorage.setItem('robotika_db_programs', JSON.stringify(nextList));
+    setTimeout(() => {
+      syncPrograms(prevList, nextList);
+    }, 0);
   };
 
   const syncGallery = async (prevList: ActivityImage[], nextList: ActivityImage[]) => {
@@ -464,12 +515,13 @@ export default function App() {
   };
 
   const handleSetGallery = (value: ActivityImage[] | ((prev: ActivityImage[]) => ActivityImage[])) => {
-    setGallery(prev => {
-      const nextList = typeof value === 'function' ? value(prev) : value;
-      localStorage.setItem('robotika_db_gallery', JSON.stringify(nextList));
-      syncGallery(prev, nextList);
-      return nextList;
-    });
+    const prevList = gallery;
+    const nextList = typeof value === 'function' ? value(prevList) : value;
+    setGallery(nextList);
+    localStorage.setItem('robotika_db_gallery', JSON.stringify(nextList));
+    setTimeout(() => {
+      syncGallery(prevList, nextList);
+    }, 0);
   };
 
   const syncNews = async (prevList: NewsItem[], nextList: NewsItem[]) => {
@@ -505,12 +557,13 @@ export default function App() {
   };
 
   const handleSetNews = (value: NewsItem[] | ((prev: NewsItem[]) => NewsItem[])) => {
-    setNews(prev => {
-      const nextList = typeof value === 'function' ? value(prev) : value;
-      localStorage.setItem('robotika_db_news', JSON.stringify(nextList));
-      syncNews(prev, nextList);
-      return nextList;
-    });
+    const prevList = news;
+    const nextList = typeof value === 'function' ? value(prevList) : value;
+    setNews(nextList);
+    localStorage.setItem('robotika_db_news', JSON.stringify(nextList));
+    setTimeout(() => {
+      syncNews(prevList, nextList);
+    }, 0);
   };
 
   const syncProducts = async (prevList: ProductItem[], nextList: ProductItem[]) => {
@@ -546,12 +599,13 @@ export default function App() {
   };
 
   const handleSetProducts = (value: ProductItem[] | ((prev: ProductItem[]) => ProductItem[])) => {
-    setProducts(prev => {
-      const nextList = typeof value === 'function' ? value(prev) : value;
-      localStorage.setItem('robotika_db_products', JSON.stringify(nextList));
-      syncProducts(prev, nextList);
-      return nextList;
-    });
+    const prevList = products;
+    const nextList = typeof value === 'function' ? value(prevList) : value;
+    setProducts(nextList);
+    localStorage.setItem('robotika_db_products', JSON.stringify(nextList));
+    setTimeout(() => {
+      syncProducts(prevList, nextList);
+    }, 0);
   };
 
   const handleSetSummary = async (value: any) => {
