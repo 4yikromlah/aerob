@@ -308,9 +308,9 @@ export default function App() {
     };
   }, []);
 
-  const syncMembers = async (nextList: Member[]) => {
+  const syncMembers = async (prevList: Member[], nextList: Member[]) => {
     try {
-      const prevMap = new Map(members.map(m => [m.id, m]));
+      const prevMap = new Map(prevList.map(m => [m.id, m]));
       const nextMap = new Map(nextList.map(m => [m.id, m]));
 
       for (const item of nextList) {
@@ -330,7 +330,7 @@ export default function App() {
         }
       }
 
-      for (const item of members) {
+      for (const item of prevList) {
         if (!nextMap.has(item.id)) {
           await fetch(`/api/members/${item.id}`, { method: 'DELETE' });
         }
@@ -341,15 +341,17 @@ export default function App() {
   };
 
   const handleSetMembers = (value: Member[] | ((prev: Member[]) => Member[])) => {
-    const nextList = typeof value === 'function' ? value(members) : value;
-    setMembers(nextList);
-    localStorage.setItem('robotika_db_members', JSON.stringify(nextList));
-    syncMembers(nextList);
+    setMembers(prev => {
+      const nextList = typeof value === 'function' ? value(prev) : value;
+      localStorage.setItem('robotika_db_members', JSON.stringify(nextList));
+      syncMembers(prev, nextList);
+      return nextList;
+    });
   };
 
-  const syncInventory = async (nextList: InventoryItem[]) => {
+  const syncInventory = async (prevList: InventoryItem[], nextList: InventoryItem[]) => {
     try {
-      const prevMap = new Map(inventory.map(m => [m.id, m]));
+      const prevMap = new Map(prevList.map(m => [m.id, m]));
       const nextMap = new Map(nextList.map(m => [m.id, m]));
 
       for (const item of nextList) {
@@ -369,7 +371,7 @@ export default function App() {
         }
       }
 
-      for (const item of inventory) {
+      for (const item of prevList) {
         if (!nextMap.has(item.id)) {
           await fetch(`/api/inventory/${item.id}`, { method: 'DELETE' });
         }
@@ -380,15 +382,17 @@ export default function App() {
   };
 
   const handleSetInventory = (value: InventoryItem[] | ((prev: InventoryItem[]) => InventoryItem[])) => {
-    const nextList = typeof value === 'function' ? value(inventory) : value;
-    setInventory(nextList);
-    localStorage.setItem('robotika_db_inventory', JSON.stringify(nextList));
-    syncInventory(nextList);
+    setInventory(prev => {
+      const nextList = typeof value === 'function' ? value(prev) : value;
+      localStorage.setItem('robotika_db_inventory', JSON.stringify(nextList));
+      syncInventory(prev, nextList);
+      return nextList;
+    });
   };
 
-  const syncPrograms = async (nextList: Program[]) => {
+  const syncPrograms = async (prevList: Program[], nextList: Program[]) => {
     try {
-      const prevMap = new Map(programs.map(m => [m.id, m]));
+      const prevMap = new Map(prevList.map(m => [m.id, m]));
       const nextMap = new Map(nextList.map(m => [m.id, m]));
 
       for (const item of nextList) {
@@ -408,7 +412,7 @@ export default function App() {
         }
       }
 
-      for (const item of programs) {
+      for (const item of prevList) {
         if (!nextMap.has(item.id)) {
           await fetch(`/api/programs/${item.id}`, { method: 'DELETE' });
         }
@@ -419,15 +423,17 @@ export default function App() {
   };
 
   const handleSetPrograms = (value: Program[] | ((prev: Program[]) => Program[])) => {
-    const nextList = typeof value === 'function' ? value(programs) : value;
-    setPrograms(nextList);
-    localStorage.setItem('robotika_db_programs', JSON.stringify(nextList));
-    syncPrograms(nextList);
+    setPrograms(prev => {
+      const nextList = typeof value === 'function' ? value(prev) : value;
+      localStorage.setItem('robotika_db_programs', JSON.stringify(nextList));
+      syncPrograms(prev, nextList);
+      return nextList;
+    });
   };
 
-  const syncGallery = async (nextList: ActivityImage[]) => {
+  const syncGallery = async (prevList: ActivityImage[], nextList: ActivityImage[]) => {
     try {
-      const prevMap = new Map(gallery.map(m => [m.id, m]));
+      const prevMap = new Map(prevList.map(m => [m.id, m]));
       const nextMap = new Map(nextList.map(m => [m.id, m]));
 
       for (const item of nextList) {
@@ -447,7 +453,7 @@ export default function App() {
         }
       }
 
-      for (const item of gallery) {
+      for (const item of prevList) {
         if (!nextMap.has(item.id)) {
           await fetch(`/api/gallery/${item.id}`, { method: 'DELETE' });
         }
@@ -458,15 +464,17 @@ export default function App() {
   };
 
   const handleSetGallery = (value: ActivityImage[] | ((prev: ActivityImage[]) => ActivityImage[])) => {
-    const nextList = typeof value === 'function' ? value(gallery) : value;
-    setGallery(nextList);
-    localStorage.setItem('robotika_db_gallery', JSON.stringify(nextList));
-    syncGallery(nextList);
+    setGallery(prev => {
+      const nextList = typeof value === 'function' ? value(prev) : value;
+      localStorage.setItem('robotika_db_gallery', JSON.stringify(nextList));
+      syncGallery(prev, nextList);
+      return nextList;
+    });
   };
 
-  const syncNews = async (nextList: NewsItem[]) => {
+  const syncNews = async (prevList: NewsItem[], nextList: NewsItem[]) => {
     try {
-      const prevMap = new Map(news.map(m => [m.id, m]));
+      const prevMap = new Map(prevList.map(m => [m.id, m]));
       const nextMap = new Map(nextList.map(m => [m.id, m]));
 
       for (const item of nextList) {
@@ -486,7 +494,7 @@ export default function App() {
         }
       }
 
-      for (const item of news) {
+      for (const item of prevList) {
         if (!nextMap.has(item.id)) {
           await fetch(`/api/news/${item.id}`, { method: 'DELETE' });
         }
@@ -497,15 +505,17 @@ export default function App() {
   };
 
   const handleSetNews = (value: NewsItem[] | ((prev: NewsItem[]) => NewsItem[])) => {
-    const nextList = typeof value === 'function' ? value(news) : value;
-    setNews(nextList);
-    localStorage.setItem('robotika_db_news', JSON.stringify(nextList));
-    syncNews(nextList);
+    setNews(prev => {
+      const nextList = typeof value === 'function' ? value(prev) : value;
+      localStorage.setItem('robotika_db_news', JSON.stringify(nextList));
+      syncNews(prev, nextList);
+      return nextList;
+    });
   };
 
-  const syncProducts = async (nextList: ProductItem[]) => {
+  const syncProducts = async (prevList: ProductItem[], nextList: ProductItem[]) => {
     try {
-      const prevMap = new Map(products.map(m => [m.id, m]));
+      const prevMap = new Map(prevList.map(m => [m.id, m]));
       const nextMap = new Map(nextList.map(m => [m.id, m]));
 
       for (const item of nextList) {
@@ -525,7 +535,7 @@ export default function App() {
         }
       }
 
-      for (const item of products) {
+      for (const item of prevList) {
         if (!nextMap.has(item.id)) {
           await fetch(`/api/products/${item.id}`, { method: 'DELETE' });
         }
@@ -536,85 +546,77 @@ export default function App() {
   };
 
   const handleSetProducts = (value: ProductItem[] | ((prev: ProductItem[]) => ProductItem[])) => {
-    const nextList = typeof value === 'function' ? value(products) : value;
-    setProducts(nextList);
-    localStorage.setItem('robotika_db_products', JSON.stringify(nextList));
-    syncProducts(nextList);
+    setProducts(prev => {
+      const nextList = typeof value === 'function' ? value(prev) : value;
+      localStorage.setItem('robotika_db_products', JSON.stringify(nextList));
+      syncProducts(prev, nextList);
+      return nextList;
+    });
   };
 
   const handleSetSummary = async (value: any) => {
-    const next = typeof value === 'function' ? value(summary) : value;
-    setSummary(next);
-    localStorage.setItem('robotika_db_summary', JSON.stringify(next));
-    try {
-      await fetch('/api/settings/profile', {
+    setSummary(prev => {
+      const next = typeof value === 'function' ? value(prev) : value;
+      localStorage.setItem('robotika_db_summary', JSON.stringify(next));
+      fetch('/api/settings/profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ value: next })
-      });
-    } catch (err) {
-      console.error("Error syncing summary:", err);
-    }
+      }).catch(err => console.error("Error syncing summary:", err));
+      return next;
+    });
   };
 
   const handleSetAchievements = async (value: any) => {
-    const next = typeof value === 'function' ? value(achievements) : value;
-    setAchievements(next);
-    localStorage.setItem('robotika_db_achievements', JSON.stringify(next));
-    try {
-      await fetch('/api/achievements', {
+    setAchievements(prev => {
+      const next = typeof value === 'function' ? value(prev) : value;
+      localStorage.setItem('robotika_db_achievements', JSON.stringify(next));
+      fetch('/api/achievements', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(next)
-      });
-    } catch (err) {
-      console.error("Error syncing achievements:", err);
-    }
+      }).catch(err => console.error("Error syncing achievements:", err));
+      return next;
+    });
   };
 
   const handleSetVisiMisi = async (value: any) => {
-    const next = typeof value === 'function' ? value(visiMisi) : value;
-    setVisiMisi(next);
-    localStorage.setItem('robotika_db_visimisi', JSON.stringify(next));
-    try {
-      await fetch('/api/settings/visimisi', {
+    setVisiMisi(prev => {
+      const next = typeof value === 'function' ? value(prev) : value;
+      localStorage.setItem('robotika_db_visimisi', JSON.stringify(next));
+      fetch('/api/settings/visimisi', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ value: next })
-      });
-    } catch (err) {
-      console.error("Error syncing visimisi:", err);
-    }
+      }).catch(err => console.error("Error syncing visimisi:", err));
+      return next;
+    });
   };
 
   const handleSetGeneralInfo = async (value: any) => {
-    const next = typeof value === 'function' ? value(generalInfo) : value;
-    setGeneralInfo(next);
-    localStorage.setItem('robotika_db_general_info', JSON.stringify(next));
-    try {
-      await fetch('/api/settings/general_info', {
+    setGeneralInfo(prev => {
+      const next = typeof value === 'function' ? value(prev) : value;
+      localStorage.setItem('robotika_db_general_info', JSON.stringify(next));
+      fetch('/api/settings/general_info', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ value: next })
-      });
-    } catch (err) {
-      console.error("Error syncing general_info:", err);
-    }
+      }).catch(err => console.error("Error syncing general_info:", err));
+      return next;
+    });
   };
 
   const handleSetPublicServices = async (value: any) => {
-    const next = typeof value === 'function' ? value(publicServices) : value;
-    setPublicServices(next);
-    localStorage.setItem('robotika_db_services', JSON.stringify(next));
-    try {
-      await fetch('/api/settings/public_services', {
+    setPublicServices(prev => {
+      const next = typeof value === 'function' ? value(prev) : value;
+      localStorage.setItem('robotika_db_services', JSON.stringify(next));
+      fetch('/api/settings/public_services', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ value: next })
-      });
-    } catch (err) {
-      console.error("Error syncing services:", err);
-    }
+      }).catch(err => console.error("Error syncing services:", err));
+      return next;
+    });
   };
 
   // Auth & Session States

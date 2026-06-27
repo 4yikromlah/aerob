@@ -7,25 +7,106 @@ const router = Router();
 function parseMember(row: any) {
   if (!row) return row;
   try {
+    const interestsVal = typeof row.interests === 'string' ? JSON.parse(row.interests) : (row.interests || []);
     return {
-      ...row,
-      interests: typeof row.interests === 'string' ? JSON.parse(row.interests) : (row.interests || [])
+      id: row.id,
+      name: row.name,
+      class: row.class,
+      role: row.role,
+      email: row.email,
+      joinedDate: row.joineddate || row.joinedDate || '',
+      interests: Array.isArray(interestsVal) ? interestsVal : [],
+      username: row.username,
+      password: row.password,
+      memberType: row.membertype || row.memberType || 'Pemula'
     };
   } catch {
-    return { ...row, interests: [] };
+    return {
+      id: row.id,
+      name: row.name,
+      class: row.class,
+      role: row.role,
+      email: row.email,
+      joinedDate: row.joineddate || row.joinedDate || '',
+      interests: [],
+      username: row.username,
+      password: row.password,
+      memberType: row.membertype || row.memberType || 'Pemula'
+    };
   }
+}
+
+function parseProgram(row: any) {
+  if (!row) return row;
+  return {
+    id: row.id,
+    title: row.title,
+    iconName: row.iconname || row.iconName || '',
+    description: row.description,
+    detailedInfo: row.detailedinfo || row.detailedInfo || '',
+    difficulty: row.difficulty,
+    duration: row.duration,
+    imageUrl: row.imageurl || row.imageUrl || undefined
+  };
+}
+
+function parseGallery(row: any) {
+  if (!row) return row;
+  return {
+    id: row.id,
+    title: row.title,
+    category: row.category,
+    imageUrl: row.imageurl || row.imageUrl || '',
+    description: row.description,
+    date: row.date
+  };
+}
+
+function parseNews(row: any) {
+  if (!row) return row;
+  return {
+    id: row.id,
+    title: row.title,
+    category: row.category,
+    summary: row.summary,
+    content: row.content,
+    date: row.date,
+    author: row.author,
+    readTime: row.readtime || row.readTime || '',
+    imageUrl: row.imageurl || row.imageUrl || undefined
+  };
 }
 
 function parseProduct(row: any) {
   if (!row) return row;
   try {
+    const specsVal = typeof row.specs === 'string' ? JSON.parse(row.specs) : (row.specs || []);
+    const techVal = typeof row.technologies === 'string' ? JSON.parse(row.technologies) : (row.technologies || []);
     return {
-      ...row,
-      specs: typeof row.specs === 'string' ? JSON.parse(row.specs) : (row.specs || []),
-      technologies: typeof row.technologies === 'string' ? JSON.parse(row.technologies) : (row.technologies || [])
+      id: row.id,
+      name: row.name,
+      category: row.category,
+      description: row.description,
+      specs: Array.isArray(specsVal) ? specsVal : [],
+      technologies: Array.isArray(techVal) ? techVal : [],
+      imageUrl: row.imageurl || row.imageUrl || '',
+      creator: row.creator,
+      year: row.year,
+      status: row.status
     };
   } catch {
-    return { ...row, specs: [], technologies: [] };
+    return {
+      id: row.id,
+      name: row.name,
+      category: row.category,
+      description: row.description,
+      specs: [],
+      technologies: [],
+      imageUrl: row.imageurl || row.imageUrl || '',
+      creator: row.creator,
+      year: row.year,
+      status: row.status
+    };
   }
 }
 
@@ -195,7 +276,7 @@ router.get('/programs', async (req, res) => {
   if (isDbConnected && sqlClient) {
     try {
       const rows = await sqlClient`SELECT * FROM programs ORDER BY title ASC`;
-      res.json(rows);
+      res.json(rows.map(parseProgram));
     } catch (err) {
       console.error("GET /programs error:", err);
       res.status(500).json({ error: "Failed to fetch programs" });
@@ -272,7 +353,7 @@ router.get('/gallery', async (req, res) => {
   if (isDbConnected && sqlClient) {
     try {
       const rows = await sqlClient`SELECT * FROM gallery ORDER BY date DESC`;
-      res.json(rows);
+      res.json(rows.map(parseGallery));
     } catch (err) {
       console.error("GET /gallery error:", err);
       res.status(500).json({ error: "Failed to fetch gallery" });
@@ -348,7 +429,7 @@ router.get('/news', async (req, res) => {
   if (isDbConnected && sqlClient) {
     try {
       const rows = await sqlClient`SELECT * FROM news ORDER BY date DESC`;
-      res.json(rows);
+      res.json(rows.map(parseNews));
     } catch (err) {
       console.error("GET /news error:", err);
       res.status(500).json({ error: "Failed to fetch news" });
