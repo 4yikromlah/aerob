@@ -1,0 +1,8 @@
+{
+  "name": "Remix: SI Ekstrakurikuler Robotika",
+  "description": "Sistem Informasi Manajemen Ekstrakurikuler Robotika Sekolah - Pembelajaran, karya, prestasi, dan keanggotaan robotika modern.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

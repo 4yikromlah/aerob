@@ -1,0 +1,496 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", "Poppins", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Poppins", "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  
+  --color-brand-blue: #2563EB;
+  --color-brand-navy: #0F172A;
+  --color-brand-cyan: #06B6D4;
+  --color-brand-teal: #14B8A6;
+  --color-brand-sky: #38BDF8;
+  --color-brand-purple: #8B5CF6;
+  
+  --animate-pulse-slow: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-spin-slow: spin 20s linear infinite;
+  --animate-glow: glow 3s ease-in-out infinite alternate;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-15px) rotate(2deg);
+  }
+}
+
+@keyframes glow {
+  0% {
+    box-shadow: 0 0 5px rgba(6, 182, 212, 0.2), 0 0 10px rgba(139, 92, 246, 0.1);
+  }
+  100% {
+    box-shadow: 0 0 20px rgba(6, 182, 212, 0.6), 0 0 35px rgba(139, 92, 246, 0.3);
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+  font-family: var(--font-sans);
+}
+
+body {
+  background-color: #0B0F19;
+  color: #E2E8F0;
+  overflow-x: hidden;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #0F172A;
+}
+::-webkit-scrollbar-thumb {
+  background: #1E293B;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+  border-color: #06B6D4;
+}
+
+/* Custom Glassmorphism Utilities */
+.glass-panel {
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-panel-light {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.glass-card-hover {
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.glass-card-hover:hover {
+  transform: translateY(-6px);
+  border-color: rgba(6, 182, 212, 0.4);
+  box-shadow: 0 12px 40px -10px rgba(6, 182, 212, 0.25);
+}
+
+/* Modern Neumorphism accents (subtle blend for futuristic feel) */
+.neo-accent-button {
+  background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
+  box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.4), 
+              -1px -1px 3px rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.neo-accent-button:active {
+  box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.5),
+              inset -1px -1px 2px rgba(255, 255, 255, 0.02);
+}
+
+/* Holographic / Glowing Effects */
+.glow-cyan {
+  text-shadow: 0 0 10px rgba(6, 182, 212, 0.6), 0 0 20px rgba(6, 182, 212, 0.3);
+}
+
+.glow-purple {
+  text-shadow: 0 0 10px rgba(139, 92, 246, 0.6), 0 0 20px rgba(139, 92, 246, 0.3);
+}
+
+.border-glow-cyan {
+  box-shadow: 0 0 15px rgba(6, 182, 212, 0.15);
+  border-color: rgba(6, 182, 212, 0.3);
+}
+
+.border-glow-cyan:focus {
+  box-shadow: 0 0 20px rgba(6, 182, 212, 0.4);
+  border-color: rgba(6, 182, 212, 0.8);
+}
+
+/* Circuit board background helper SVG */
+.bg-circuit-pattern {
+  background-image: radial-gradient(rgba(37, 99, 235, 0.1) 1.5px, transparent 1.5px);
+  background-size: 24px 24px;
+}
+
+/* Custom Clay Blue (Biru Clay Terang Sedang) Stylesheet Rules */
+
+.theme-light {
+  background-color: #bae6fd !important;
+  color: #0f172a !important;
+}
+
+/* Override all sections background with beautiful medium-bright blue */
+.theme-light section,
+.theme-light main,
+.theme-light footer,
+.theme-light .bg-slate-950,
+.theme-light .bg-slate-900,
+.theme-light .bg-[#0B0F19],
+.theme-light .bg-[#070a13],
+.theme-light .from-[#0B0F19],
+.theme-light .to-[#070a13],
+.theme-light .from-[#070a13],
+.theme-light .to-[#0B0F19],
+.theme-light .bg-slate-950\/80,
+.theme-light .bg-slate-950\/60,
+.theme-light .bg-slate-950\/40,
+.theme-light .bg-indigo-950\/40,
+.theme-light .bg-slate-900\/60 {
+  background-color: #bae6fd !important;
+  background-image: none !important;
+  color: #1e293b !important;
+}
+
+/* Sticky Navbar custom styling */
+.theme-light header#navbar {
+  background: rgba(186, 230, 253, 0.9) !important;
+  backdrop-filter: blur(14px) saturate(190%) !important;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.8) !important;
+  box-shadow: 0 8px 32px rgba(14, 116, 144, 0.08) !important;
+}
+
+.theme-light header#navbar span.text-white,
+.theme-light header#navbar button span,
+.theme-light header#navbar p,
+.theme-light header#navbar .text-slate-300,
+.theme-light header#navbar .text-slate-200 {
+  color: #0f172a !important;
+}
+
+.theme-light header#navbar button:hover span,
+.theme-light header#navbar .text-brand-cyan {
+  color: #0369a1 !important;
+}
+
+.theme-light header#navbar .bg-slate-900\/60,
+.theme-light header#navbar .bg-slate-800 {
+  background: #e0f2fe !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.9) !important;
+  box-shadow: inset 1px 1.5px 3px rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Premium 3D Claymorphism Cards (floating soft-white shapes with blue shadows) */
+.theme-light .glass-panel,
+.theme-light .bg-slate-900,
+.theme-light .bg-slate-950,
+.theme-light .bg-slate-950\/80,
+.theme-light .bg-slate-950\/60,
+.theme-light .bg-indigo-950\/40,
+.theme-light .p-6.rounded-3xl.glass-panel,
+.theme-light .bg-black\/30 {
+  background: #f0f9ff !important;
+  color: #1e293b !important;
+  border-radius: 24px !important;
+  box-shadow: 10px 10px 20px rgba(14, 116, 144, 0.15), 
+              -10px -10px 20px rgba(255, 255, 255, 0.9), 
+              inset 3px 3px 6px rgba(255, 255, 255, 0.9), 
+              inset -3px -3px 6px rgba(14, 116, 144, 0.03) !important;
+  border: 2px solid rgba(255, 255, 255, 0.9) !important;
+}
+
+.theme-light .glass-panel:hover,
+.theme-light .bg-slate-950\/80:hover,
+.theme-light .bg-slate-950\/60:hover,
+.theme-light .bg-slate-900\/60:hover,
+.theme-light .bg-slate-900:hover,
+.theme-light .bg-slate-950:hover {
+  box-shadow: 14px 14px 28px rgba(14, 116, 144, 0.22), 
+              -14px -14px 28px rgba(255, 255, 255, 0.95), 
+              inset 2px 2px 4px rgba(255, 255, 255, 0.95), 
+              inset -2px -2px 4px rgba(14, 116, 144, 0.03) !important;
+  transform: translateY(-3px);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* Beautiful Typographic styling for contrast */
+.theme-light h1,
+.theme-light h2,
+.theme-light h3,
+.theme-light h4,
+.theme-light h5,
+.theme-light h6,
+.theme-light .text-white,
+.theme-light .text-slate-100,
+.theme-light .text-slate-200,
+.theme-light .text-slate-300 {
+  color: #034f75 !important;
+}
+
+.theme-light p,
+.theme-light span,
+.theme-light li,
+.theme-light .text-slate-400,
+.theme-light .text-slate-500 {
+  color: #1e3a5f !important;
+}
+
+/* Ensure brand and interactive accents remain legible in bright clay canvas */
+.theme-light .text-brand-cyan,
+.theme-light .text-cyan-400 {
+  color: #0369a1 !important;
+}
+
+.theme-light .text-brand-purple,
+.theme-light .text-purple-400,
+.theme-light .text-brand-blue {
+  color: #4338ca !important;
+}
+
+/* Soft sunken inputs to resemble soft clay indentations */
+.theme-light input,
+.theme-light textarea,
+.theme-light select,
+.theme-light .ace_editor,
+.theme-light .bg-black\/90 {
+  background: #e0f2fe !important;
+  color: #0f172a !important;
+  border: 1.5px solid rgba(14, 116, 144, 0.15) !important;
+  box-shadow: inset 4px 4px 8px rgba(14, 116, 144, 0.1), 
+              inset -4px -4px 8px rgba(255, 255, 255, 0.95) !important;
+  border-radius: 12px !important;
+}
+
+.theme-light input:focus,
+.theme-light textarea:focus,
+.theme-light select:focus {
+  border-color: #0284c7 !important;
+  box-shadow: inset 4px 4px 8px rgba(14, 116, 144, 0.08), 
+              inset -4px -4px 8px rgba(255, 255, 255, 0.95),
+              0 0 10px rgba(2, 132, 199, 0.2) !important;
+}
+
+.theme-light input::placeholder,
+.theme-light textarea::placeholder {
+  color: #64748b !important;
+}
+
+/* Tactical clay 3D buttons */
+.theme-light button.p-3.bg-slate-900,
+.theme-light button.p-2.bg-slate-900,
+.theme-light .bg-slate-900,
+.theme-light .bg-slate-800,
+.theme-light button.bg-slate-900,
+.theme-light button.bg-slate-800,
+.theme-light .border-white\/5 {
+  background: #f0f9ff !important;
+  color: #034f75 !important;
+  box-shadow: 4px 4px 8px rgba(14, 116, 144, 0.12), 
+              -4px -4px 8px rgba(255, 255, 255, 0.9), 
+              inset 1px 1px 2px rgba(255, 255, 255, 0.9) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.9) !important;
+}
+
+.theme-light button.p-3.bg-slate-900:hover,
+.theme-light button.p-2.bg-slate-900:hover,
+.theme-light .bg-slate-800:hover,
+.theme-light button.bg-slate-900:hover,
+.theme-light button.bg-slate-800:hover {
+  background: #e0f2fe !important;
+  box-shadow: 6px 6px 12px rgba(14, 116, 144, 0.16), 
+              -6px -6px 12px rgba(255, 255, 255, 0.95), 
+              inset 1px 1px 2px rgba(255, 255, 255, 0.9) !important;
+}
+
+.theme-light button.p-3.bg-slate-900:active,
+.theme-light button.p-2.bg-slate-900:active,
+.theme-light button.bg-slate-900:active,
+.theme-light button.bg-slate-800:active {
+  box-shadow: inset 3px 3px 6px rgba(14, 116, 144, 0.12), 
+              inset -3px -3px 6px rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Solid high contrast gradient buttons should remain brightly shaded but with a subtle outer clay shadow */
+.theme-light .bg-gradient-to-r {
+  color: #ffffff !important;
+}
+.theme-light .bg-gradient-to-r span,
+.theme-light .bg-gradient-to-r p {
+  color: #ffffff !important;
+}
+
+/* Chat boxes styling */
+.theme-light .bg-brand-blue,
+.theme-light .bg-blue-600,
+.theme-light .bg-indigo-600,
+.theme-light .bg-brand-cyan,
+.theme-light .bg-brand-purple,
+.theme-light .bg-emerald-600,
+.theme-light .bg-green-600 {
+  color: #ffffff !important;
+}
+
+.theme-light .bg-brand-blue span,
+.theme-light .bg-blue-600 span,
+.theme-light .bg-indigo-600 span,
+.theme-light .bg-brand-cyan span,
+.theme-light .bg-brand-purple span,
+.theme-light .bg-emerald-600 span,
+.theme-light .bg-green-600 span,
+.theme-light .bg-brand-blue p,
+.theme-light .bg-blue-600 p,
+.theme-light .bg-indigo-600 p,
+.theme-light .bg-brand-cyan p,
+.theme-light .bg-brand-purple p,
+.theme-light .bg-emerald-600 p,
+.theme-light .bg-[#06b6d4] p,
+.theme-light .bg-green-600 p {
+  color: #ffffff !important;
+}
+
+/* Tables correction for high readability */
+.theme-light th {
+  color: #034f75 !important;
+  background-color: #e0f2fe !important;
+}
+
+.theme-light td {
+  color: #1e3a5f !important;
+  border-bottom: 1px solid rgba(14, 116, 144, 0.1) !important;
+}
+
+/* Playgrounds overlay bottom bar */
+.theme-light .fixed.bottom-4 {
+  background-color: rgba(224, 242, 254, 0.95) !important;
+  border-color: rgba(14, 116, 144, 0.15) !important;
+  box-shadow: 0 8px 32px rgba(14, 116, 144, 0.12) !important;
+}
+
+.theme-light .fixed.bottom-4 span {
+  color: #0369a1 !important;
+}
+
+.theme-light .fixed.bottom-4 button {
+  background-color: #f0f9ff !important;
+}
+
+/* Floating Action Button and Scroll-To-Top alignment */
+.theme-light .fixed.bottom-6.right-6 {
+  background: #f0f9ff !important;
+  box-shadow: 6px 6px 12px rgba(14, 116, 144, 0.15), 
+              -6px -6px 12px rgba(255, 255, 255, 0.9), 
+              inset 2px 2px 4px rgba(255, 255, 255, 0.9) !important;
+  color: #0284c7 !important;
+  border-color: rgba(255, 255, 255, 0.95) !important;
+}
+
+.theme-light .fixed.bottom-6.right-6:hover {
+  background: #e0f2fe !important;
+  color: #0369a1 !important;
+}
+
+/* Custom indicator items */
+.theme-light .bg-white\/5,
+.theme-light .bg-white\/10 {
+  background: rgba(14, 116, 144, 0.08) !important;
+}
+
+/* Helper maps layout patterns */
+.bg-grid-pattern {
+  background-image: linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 30px 30px;
+}
+
+.theme-light .bg-grid-pattern {
+  background-image: linear-gradient(rgba(14, 116, 144, 0.04) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(14, 116, 144, 0.04) 1px, transparent 1px) !important;
+}
+
+.bg-scanner-overlay {
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.04), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.04));
+  background-size: 100% 4px, 3px 100%;
+}
+
+/* Custom Background Transparency & Backdrop Blur Overrides for Dark Mode & Light Mode */
+.has-custom-bg #navbar,
+#navbar.scrolled {
+  background-color: rgba(11, 15, 25, 0.45) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.2) !important;
+}
+
+.has-custom-bg section,
+.has-custom-bg footer,
+.has-custom-bg #ringkasan,
+.has-custom-bg #vision,
+.has-custom-bg #programs,
+.has-custom-bg #gallery,
+.has-custom-bg #news,
+.has-custom-bg #services,
+.has-custom-bg #prestasi,
+.has-custom-bg #agenda,
+.has-custom-bg #products,
+.has-custom-bg #testimoni,
+.has-custom-bg #faq,
+.has-custom-bg #kontak,
+.has-custom-bg #navigator-map,
+.has-custom-bg #learning {
+  background-color: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  background-image: none !important;
+}
+
+/* Transparent without blur for all sub-panels/cards when custom bg is active */
+.has-custom-bg .bg-slate-900\/60,
+.has-custom-bg .bg-slate-950\/60,
+.has-custom-bg .bg-slate-900\/80,
+.has-custom-bg .bg-slate-950\/80,
+.has-custom-bg .bg-[#0c1424],
+.has-custom-bg .bg-slate-900\/40,
+.has-custom-bg .bg-slate-950\/40,
+.has-custom-bg .bg-slate-950\/50,
+.has-custom-bg .bg-black\/30,
+.has-custom-bg .bg-black\/20,
+.has-custom-bg .glass-panel {
+  background-color: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  box-shadow: none !important;
+}
+
+/* Glassmorphism fallback for default background (without custom bg) to ensure high-end styling */
+:not(.has-custom-bg) .bg-slate-900\/60,
+:not(.has-custom-bg) .bg-slate-950\/60,
+:not(.has-custom-bg) .bg-slate-900\/80,
+:not(.has-custom-bg) .bg-slate-950\/80,
+:not(.has-custom-bg) .bg-[#0c1424],
+:not(.has-custom-bg) .bg-slate-900\/40,
+:not(.has-custom-bg) .bg-slate-950\/40,
+:not(.has-custom-bg) .bg-slate-950\/50,
+:not(.has-custom-bg) .bg-black\/30,
+:not(.has-custom-bg) .bg-black\/20,
+:not(.has-custom-bg) .glass-panel {
+  background-color: rgba(15, 23, 42, 0.4) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Keep the custom background styling clear but beautifully enhanced */
+.has-custom-bg .bg-slate-950\/20 {
+  background-color: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
