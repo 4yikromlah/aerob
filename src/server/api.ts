@@ -162,8 +162,18 @@ router.get('/all-data', async (req, res) => {
         settings: settingsMap
       });
     } catch (err) {
-      console.error("GET /all-data error:", err);
-      res.status(500).json({ error: "Failed to fetch all data from Neon SQL" });
+      console.error("GET /all-data error (gracefully falling back to local memory store):", err);
+      res.json({
+        members: localStore.members,
+        inventory: localStore.inventory,
+        programs: localStore.programs,
+        gallery: localStore.gallery,
+        news: localStore.news,
+        products: localStore.products,
+        achievements: localStore.achievements,
+        settings: localStore.settings,
+        dbError: String(err)
+      });
     }
   } else {
     res.json({
