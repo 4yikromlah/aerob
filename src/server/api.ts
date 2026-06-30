@@ -736,4 +736,35 @@ router.post('/settings/:key', async (req, res) => {
   }
 });
 
+// --- DATABASE HEALTH CHECK ENDPOINT ---
+router.get('/db-health', async (req, res) => {
+  if (isDbConnected && sqlClient) {
+    try {
+      const start = Date.now();
+      await sqlClient`SELECT 1`;
+      const latency = Date.now() - start;
+      res.json({
+        status: 'connected',
+        connected: true,
+        latency: `${latency}ms`,
+        fallback: false
+      });
+    } catch (err: any) {
+      console.error("Database health check failed:", err);
+      res.json({
+        status: 'error',
+        connected: false,
+        error: err.message || String(err),
+        fallback: false
+      });
+    }
+  } else {
+    res.json({
+      status: 'fallback',
+      connected: false,
+      fallback: true
+    });
+  }
+});
+
 export default router;

@@ -30,6 +30,11 @@ export default function Navbar({
 }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [dbHealth, setDbHealth] = useState<{
+    status: 'connected' | 'fallback' | 'error' | 'checking';
+    latency?: string;
+    error?: string;
+  }>({ status: 'checking' });
 
   useEffect(() => {
     const handleScroll = () => {
@@ -41,6 +46,36 @@ export default function Navbar({
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const checkDbHealth = async () => {
+      try {
+        const res = await fetch('/api/db-health', {
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setDbHealth({
+            status: data.status,
+            latency: data.latency,
+            error: data.error
+          });
+        } else {
+          setDbHealth({ status: 'error', error: `HTTP ${res.status}` });
+        }
+      } catch (err: any) {
+        setDbHealth({ status: 'error', error: err.message || String(err) });
+      }
+    };
+
+    checkDbHealth();
+    const interval = setInterval(checkDbHealth, 10000);
+    return () => clearInterval(interval);
   }, []);
 
   const menuItems = [
@@ -86,9 +121,47 @@ export default function Navbar({
               <div className="absolute -inset-0.5 bg-brand-cyan/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-300 pointer-events-none" />
             </div>
             <div>
-              <span className="font-display font-bold text-lg md:text-xl tracking-tight text-white block">
-                ROBOTIKA
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="font-display font-bold text-lg md:text-xl tracking-tight text-white block">
+                  ROBOTIKA
+                </span>
+                {/* Connection Status LED Dot */}
+                <div className="relative group/db-indicator flex items-center mt-1">
+                  <span className={`w-2 h-2 rounded-full transition-all duration-500 ${
+                    dbHealth.status === 'connected' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]' :
+                    dbHealth.status === 'fallback' ? 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)]' :
+                    dbHealth.status === 'error' ? 'bg-rose-500 shadow-[0_0_8px_rgba(239,68,68,0.8)] animate-pulse' :
+                    'bg-slate-500 shadow-[0_0_8px_rgba(100,116,139,0.5)] animate-pulse'
+                  }`} />
+                  {/* Tooltip on hover */}
+                  <div className="absolute top-full left-0 mt-2 hidden group-hover/db-indicator:flex flex-col gap-0.5 z-50 whitespace-nowrap bg-slate-950 border border-slate-800 text-white text-[10px] font-mono p-2 rounded-lg shadow-xl shadow-black/80 pointer-events-none transition-all duration-300">
+                    <span className="flex items-center gap-1.5 font-semibold text-slate-300">
+                      <span className={`w-1.5 h-1.5 rounded-full ${
+                        dbHealth.status === 'connected' ? 'bg-emerald-500' :
+                        dbHealth.status === 'fallback' ? 'bg-amber-500' :
+                        dbHealth.status === 'error' ? 'bg-rose-500' :
+                        'bg-slate-500'
+                      }`} />
+                      Pangkalan Data: {
+                        dbHealth.status === 'connected' ? 'Neon SQL Cloud' :
+                        dbHealth.status === 'fallback' ? 'Penyimpanan Lokal (Fallback)' :
+                        dbHealth.status === 'error' ? 'Koneksi Gagal' :
+                        'Memeriksa...'
+                      }
+                    </span>
+                    {dbHealth.latency && (
+                      <span className="text-[9px] text-brand-cyan pl-3">
+                        Latensi: {dbHealth.latency}
+                      </span>
+                    )}
+                    {dbHealth.error && (
+                      <span className="text-[9px] text-rose-400 pl-3 max-w-[150px] overflow-hidden text-ellipsis">
+                        Error: {dbHealth.error}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
               <span className="text-[10px] font-mono text-brand-cyan tracking-widest uppercase block -mt-1 font-semibold">
                 Sistem Informasi
               </span>
