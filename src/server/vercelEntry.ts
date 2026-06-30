@@ -1,6 +1,6 @@
 import express from 'express';
-import apiRouter from '../src/server/api';
-import { initDatabase } from '../src/server/db';
+import apiRouter from './api';
+import { initDatabase } from './db';
 
 const app = express();
 
