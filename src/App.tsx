@@ -231,7 +231,14 @@ export default function App() {
 
     const fetchSafe = async (url: string) => {
       try {
-        const res = await fetch(url);
+        const cleanUrl = `${url}${url.includes('?') ? '&' : '?'}_t=${Date.now()}`;
+        const res = await fetch(cleanUrl, {
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        });
         if (!res.ok) {
           console.warn(`[FETCH SAFE] Non-ok response from ${url}: status ${res.status}`);
           return null;
@@ -245,101 +252,70 @@ export default function App() {
 
     const fetchLiveData = async () => {
       try {
-        const [
-          membersRes,
-          inventoryRes,
-          programsRes,
-          galleryRes,
-          newsRes,
-          productsRes,
-          achievementsRes,
-          summaryRes,
-          visimisiRes,
-          generalInfoRes,
-          servicesRes,
-          customBgRes,
-          customPrimaryRes,
-          customSecondaryRes,
-          customLogoRes
-        ] = await Promise.all([
-          fetchSafe('/api/members'),
-          fetchSafe('/api/inventory'),
-          fetchSafe('/api/programs'),
-          fetchSafe('/api/gallery'),
-          fetchSafe('/api/news'),
-          fetchSafe('/api/products'),
-          fetchSafe('/api/achievements'),
-          fetchSafe('/api/settings/profile'),
-          fetchSafe('/api/settings/visimisi'),
-          fetchSafe('/api/settings/general_info'),
-          fetchSafe('/api/settings/public_services'),
-          fetchSafe('/api/settings/background'),
-          fetchSafe('/api/settings/primary_color'),
-          fetchSafe('/api/settings/secondary_color'),
-          fetchSafe('/api/settings/logo')
-        ]);
+        const data = await fetchSafe('/api/all-data');
 
-        if (!isMounted) return;
+        if (!isMounted || !data) return;
 
-        if (Array.isArray(membersRes)) {
-          setMembers(membersRes);
-          localStorage.setItem('robotika_db_members', JSON.stringify(membersRes));
+        if (Array.isArray(data.members)) {
+          setMembers(data.members);
+          localStorage.setItem('robotika_db_members', JSON.stringify(data.members));
         }
-        if (Array.isArray(inventoryRes)) {
-          setInventory(inventoryRes);
-          localStorage.setItem('robotika_db_inventory', JSON.stringify(inventoryRes));
+        if (Array.isArray(data.inventory)) {
+          setInventory(data.inventory);
+          localStorage.setItem('robotika_db_inventory', JSON.stringify(data.inventory));
         }
-        if (Array.isArray(programsRes)) {
-          setPrograms(programsRes);
-          localStorage.setItem('robotika_db_programs', JSON.stringify(programsRes));
+        if (Array.isArray(data.programs)) {
+          setPrograms(data.programs);
+          localStorage.setItem('robotika_db_programs', JSON.stringify(data.programs));
         }
-        if (Array.isArray(galleryRes)) {
-          setGallery(galleryRes);
-          localStorage.setItem('robotika_db_gallery', JSON.stringify(galleryRes));
+        if (Array.isArray(data.gallery)) {
+          setGallery(data.gallery);
+          localStorage.setItem('robotika_db_gallery', JSON.stringify(data.gallery));
         }
-        if (Array.isArray(newsRes)) {
-          setNews(newsRes);
-          localStorage.setItem('robotika_db_news', JSON.stringify(newsRes));
+        if (Array.isArray(data.news)) {
+          setNews(data.news);
+          localStorage.setItem('robotika_db_news', JSON.stringify(data.news));
         }
-        if (Array.isArray(productsRes)) {
-          setProducts(productsRes);
-          localStorage.setItem('robotika_db_products', JSON.stringify(productsRes));
+        if (Array.isArray(data.products)) {
+          setProducts(data.products);
+          localStorage.setItem('robotika_db_products', JSON.stringify(data.products));
         }
-        if (Array.isArray(achievementsRes)) {
-          setAchievements(achievementsRes);
-          localStorage.setItem('robotika_db_achievements', JSON.stringify(achievementsRes));
+        if (Array.isArray(data.achievements)) {
+          setAchievements(data.achievements);
+          localStorage.setItem('robotika_db_achievements', JSON.stringify(data.achievements));
         }
-        if (summaryRes) {
-          setSummary(summaryRes);
-          localStorage.setItem('robotika_db_summary', JSON.stringify(summaryRes));
+
+        const settings = data.settings || {};
+        if (settings.profile) {
+          setSummary(settings.profile);
+          localStorage.setItem('robotika_db_summary', JSON.stringify(settings.profile));
         }
-        if (visimisiRes !== null && visimisiRes !== undefined) {
-          setVisiMisi(visimisiRes);
-          localStorage.setItem('robotika_db_visimisi', JSON.stringify(visimisiRes));
+        if (settings.visimisi !== undefined) {
+          setVisiMisi(settings.visimisi);
+          localStorage.setItem('robotika_db_visimisi', JSON.stringify(settings.visimisi));
         }
-        if (generalInfoRes) {
-          setGeneralInfo(generalInfoRes);
-          localStorage.setItem('robotika_db_general_info', JSON.stringify(generalInfoRes));
+        if (settings.general_info) {
+          setGeneralInfo(settings.general_info);
+          localStorage.setItem('robotika_db_general_info', JSON.stringify(settings.general_info));
         }
-        if (Array.isArray(servicesRes)) {
-          setPublicServices(servicesRes);
-          localStorage.setItem('robotika_db_services', JSON.stringify(servicesRes));
+        if (Array.isArray(settings.public_services)) {
+          setPublicServices(settings.public_services);
+          localStorage.setItem('robotika_db_services', JSON.stringify(settings.public_services));
         }
-        
-        if (customBgRes) {
-          setCustomBg(customBgRes);
-          localStorage.setItem('robotika_custom_background', customBgRes);
+        if (settings.background) {
+          setCustomBg(settings.background);
+          localStorage.setItem('robotika_custom_background', settings.background);
         }
-        if (customPrimaryRes) {
-          setCustomPrimaryColor(customPrimaryRes);
-          localStorage.setItem('robotika_custom_primary_color', customPrimaryRes);
+        if (settings.primary_color) {
+          setCustomPrimaryColor(settings.primary_color);
+          localStorage.setItem('robotika_custom_primary_color', settings.primary_color);
         }
-        if (customSecondaryRes) {
-          setCustomSecondaryColor(customSecondaryRes);
-          localStorage.setItem('robotika_custom_secondary_color', customSecondaryRes);
+        if (settings.secondary_color) {
+          setCustomSecondaryColor(settings.secondary_color);
+          localStorage.setItem('robotika_custom_secondary_color', settings.secondary_color);
         }
-        if (customLogoRes) {
-          localStorage.setItem('robotika_custom_logo', customLogoRes);
+        if (settings.logo) {
+          localStorage.setItem('robotika_custom_logo', settings.logo);
         }
       } catch (err) {
         console.error("Failed to load live data from Neon database:", err);

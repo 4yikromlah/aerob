@@ -118,6 +118,67 @@ router.get('/db-status', (req, res) => {
   });
 });
 
+// Unified bootstrap/initial load endpoint to fetch all database collections in a single round-trip
+router.get('/all-data', async (req, res) => {
+  if (isDbConnected && sqlClient) {
+    try {
+      const [
+        membersRows,
+        inventoryRows,
+        programsRows,
+        galleryRows,
+        newsRows,
+        productsRows,
+        achievementsRows,
+        settingsRows
+      ] = await Promise.all([
+        sqlClient`SELECT * FROM members ORDER BY name ASC`,
+        sqlClient`SELECT * FROM inventory ORDER BY name ASC`,
+        sqlClient`SELECT * FROM programs ORDER BY title ASC`,
+        sqlClient`SELECT * FROM gallery ORDER BY date DESC`,
+        sqlClient`SELECT * FROM news ORDER BY date DESC`,
+        sqlClient`SELECT * FROM products ORDER BY name ASC`,
+        sqlClient`SELECT * FROM achievements ORDER BY year DESC`,
+        sqlClient`SELECT key, value FROM settings`
+      ]);
+
+      const settingsMap: Record<string, any> = {};
+      for (const row of settingsRows) {
+        try {
+          settingsMap[row.key] = JSON.parse(row.value);
+        } catch {
+          settingsMap[row.key] = row.value;
+        }
+      }
+
+      res.json({
+        members: membersRows.map(parseMember),
+        inventory: inventoryRows,
+        programs: programsRows.map(parseProgram),
+        gallery: galleryRows.map(parseGallery),
+        news: newsRows.map(parseNews),
+        products: productsRows.map(parseProduct),
+        achievements: achievementsRows,
+        settings: settingsMap
+      });
+    } catch (err) {
+      console.error("GET /all-data error:", err);
+      res.status(500).json({ error: "Failed to fetch all data from Neon SQL" });
+    }
+  } else {
+    res.json({
+      members: localStore.members,
+      inventory: localStore.inventory,
+      programs: localStore.programs,
+      gallery: localStore.gallery,
+      news: localStore.news,
+      products: localStore.products,
+      achievements: localStore.achievements,
+      settings: localStore.settings
+    });
+  }
+});
+
 // --- MEMBERS ENDPOINTS ---
 router.get('/members', async (req, res) => {
   if (isDbConnected && sqlClient) {
