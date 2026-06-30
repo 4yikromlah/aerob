@@ -254,6 +254,11 @@ interface DashboardProps {
   generalInfo: string;
   setGeneralInfo: (val: string) => void;
   onAddToast?: (text: string, type: 'success' | 'error' | 'info') => void;
+  customBg?: string;
+  customPrimaryColor?: string;
+  customSecondaryColor?: string;
+  customLogo?: string;
+  onSaveThemeSettings?: (bg: string, primary: string, secondary: string, logo: string) => void;
 }
 
 export default function Dashboard({ 
@@ -284,7 +289,12 @@ export default function Dashboard({
   setPublicServices,
   generalInfo,
   setGeneralInfo,
-  onAddToast
+  onAddToast,
+  customBg = 'default-robot',
+  customPrimaryColor = '#06B6D4',
+  customSecondaryColor = '#2563EB',
+  customLogo = '',
+  onSaveThemeSettings
 }: DashboardProps) {
   const isPrivileged = userData?.role === 'Pembina' || userData?.role === 'Admin' || userData?.role === 'Super Admin';
   // --- Confirmation Popup State ---
@@ -362,29 +372,27 @@ export default function Dashboard({
   const [saveFeedback, setSaveFeedback] = useState('');
 
   // --- Theme/Design Editor States ---
-  const [bgChoice, setBgChoice] = useState(() => {
-    const saved = localStorage.getItem('robotika_custom_background') || 'default-robot';
-    if (['default-robot', 'blue-grid', 'none'].includes(saved)) {
-      return saved;
+  const [bgChoice, setBgChoice] = useState('default-robot');
+  const [customBgUrl, setCustomBgUrl] = useState('');
+  const [primaryColor, setPrimaryColor] = useState('#06B6D4');
+  const [secondaryColor, setSecondaryColor] = useState('#2563EB');
+  const [customLogoUrl, setCustomLogoUrl] = useState('');
+
+  // Sync props to editor states
+  useEffect(() => {
+    if (customBg) {
+      if (['default-robot', 'blue-grid', 'none'].includes(customBg)) {
+        setBgChoice(customBg);
+        setCustomBgUrl('');
+      } else {
+        setBgChoice('custom');
+        setCustomBgUrl(customBg);
+      }
     }
-    return saved ? 'custom' : 'default-robot';
-  });
-  const [customBgUrl, setCustomBgUrl] = useState(() => {
-    const saved = localStorage.getItem('robotika_custom_background') || '';
-    if (['default-robot', 'blue-grid', 'none'].includes(saved)) {
-      return '';
-    }
-    return saved;
-  });
-  const [primaryColor, setPrimaryColor] = useState(() => {
-    return localStorage.getItem('robotika_custom_primary_color') || '#06B6D4';
-  });
-  const [secondaryColor, setSecondaryColor] = useState(() => {
-    return localStorage.getItem('robotika_custom_secondary_color') || '#2563EB';
-  });
-  const [customLogoUrl, setCustomLogoUrl] = useState(() => {
-    return localStorage.getItem('robotika_custom_logo') || '';
-  });
+    if (customPrimaryColor) setPrimaryColor(customPrimaryColor);
+    if (customSecondaryColor) setSecondaryColor(customSecondaryColor);
+    if (customLogo) setCustomLogoUrl(customLogo);
+  }, [customBg, customPrimaryColor, customSecondaryColor, customLogo]);
 
   // --- Learning Editor States ---
   const [editModules, setEditModules] = useState<Module[]>([]);
@@ -583,7 +591,6 @@ export default function Dashboard({
       instructors: editInstructors
     };
     setSummary(updated);
-    localStorage.setItem('robotika_db_summary', JSON.stringify(updated));
     triggerFeedback('Ringkasan Profil, WhatsApp, & Tim Pembina berhasil diperbarui di pangkalan data!');
   };
 
@@ -593,19 +600,16 @@ export default function Dashboard({
       missions: editMissions
     };
     setVisiMisi(updated);
-    localStorage.setItem('robotika_db_visimisi', JSON.stringify(updated));
     triggerFeedback('Visi & Misi berhasil diperbarui!');
   };
 
   const handleSaveGeneralInfo = () => {
     setGeneralInfo(editGeneralInfo);
-    localStorage.setItem('robotika_db_general_info', JSON.stringify(editGeneralInfo));
     triggerFeedback('Headline Informasi berhasil diperbarui!');
   };
 
   const handleSaveServices = () => {
     setPublicServices(editServices);
-    localStorage.setItem('robotika_db_services', JSON.stringify(editServices));
     triggerFeedback('Daftar Pelayanan berhasil diperbarui!');
   };
 
@@ -621,13 +625,11 @@ export default function Dashboard({
       instructors: editInstructors
     };
     setSummary(updated);
-    localStorage.setItem('robotika_db_summary', JSON.stringify(updated));
     triggerFeedback('Daftar Tim Pembina & Mentor berhasil diperbarui!');
   };
 
   const handleSaveAchievements = () => {
     setAchievements(editAchievements);
-    localStorage.setItem('robotika_db_achievements', JSON.stringify(editAchievements));
     triggerFeedback('Daftar Prestasi & Rekor Juara berhasil diperbarui!');
   };
 
@@ -897,7 +899,6 @@ void loop() {
 
     const updated = [...members, newCandidate];
     setMembers(updated);
-    localStorage.setItem('robotika_db_members', JSON.stringify(updated));
 
     // Show beautiful success/pending message instead of autologin
     setSuccessMsg(`Pendaftaran Berhasil! Akun "${normRegName}" dengan username "${regUsername.trim()}" telah didaftarkan sebagai Calon Anggota dan sedang menunggu persetujuan (approval) dari Pembina.`);
@@ -960,7 +961,6 @@ void loop() {
           return m;
         });
         setMembers(list);
-        localStorage.setItem('robotika_db_members', JSON.stringify(list));
         triggerFeedback(`Data Anggota "${newMemName}" berhasil diperbarui!`, 'success');
         cancelEditMember();
       } else {
@@ -978,7 +978,6 @@ void loop() {
         };
         const list = [...members, newM];
         setMembers(list);
-        localStorage.setItem('robotika_db_members', JSON.stringify(list));
         triggerFeedback(`Anggota Baru "${newMemName}" berhasil ditambahkan!`, 'success');
 
         setNewMemName('');
@@ -1011,7 +1010,6 @@ void loop() {
       onConfirm: () => {
         const filtered = members.filter((m) => m.id !== id);
         setMembers(filtered);
-        localStorage.setItem('robotika_db_members', JSON.stringify(filtered));
         triggerFeedback(`Anggota "${memberName}" berhasil dihapus dari pangkalan data!`, 'info');
       },
       confirmText: 'Ya, Hapus',
@@ -1035,7 +1033,6 @@ void loop() {
           return m;
         });
         setMembers(updated);
-        localStorage.setItem('robotika_db_members', JSON.stringify(updated));
         triggerFeedback(`Calon Anggota "${candidateName}" telah disetujui bergabung!`, 'success');
       },
       confirmText: 'Setujui',
@@ -1053,7 +1050,6 @@ void loop() {
       onConfirm: () => {
         const updated = members.filter(m => m.id !== id);
         setMembers(updated);
-        localStorage.setItem('robotika_db_members', JSON.stringify(updated));
         triggerFeedback(`Calon Anggota "${candidateName}" ditolak bergabung.`, 'info');
       },
       confirmText: 'Tolak',
@@ -1115,7 +1111,6 @@ void loop() {
           return p;
         });
         setPrograms(updated);
-        localStorage.setItem('robotika_db_programs', JSON.stringify(updated));
         triggerFeedback(`Kurikulum Program "${newProgTitle}" berhasil diperbarui!`, 'success');
         cancelEditProgram();
       } else {
@@ -1131,7 +1126,6 @@ void loop() {
         };
         const updated = [...programs, newP];
         setPrograms(updated);
-        localStorage.setItem('robotika_db_programs', JSON.stringify(updated));
         triggerFeedback(`Kurikulum Baru "${newProgTitle}" berhasil didaftarkan!`, 'success');
         setNewProgTitle('');
         setNewProgDesc('');
@@ -1161,7 +1155,6 @@ void loop() {
       onConfirm: () => {
         const filtered = programs.filter(p => p.id !== id);
         setPrograms(filtered);
-        localStorage.setItem('robotika_db_programs', JSON.stringify(filtered));
         triggerFeedback(`Kurikulum "${title}" berhasil dihapus!`, 'info');
       },
       confirmText: 'Ya, Hapus',
@@ -1211,7 +1204,6 @@ void loop() {
           return g;
         });
         setGallery(updated);
-        localStorage.setItem('robotika_db_gallery', JSON.stringify(updated));
         triggerFeedback(`Foto Kegiatan "${newGalTitle}" berhasil diperbarui!`, 'success');
         cancelEditGallery();
       } else {
@@ -1225,7 +1217,6 @@ void loop() {
         };
         const updated = [...gallery, newG];
         setGallery(updated);
-        localStorage.setItem('robotika_db_gallery', JSON.stringify(updated));
         triggerFeedback(`Foto Kegiatan baru "${newGalTitle}" berhasil diunggah!`, 'success');
         setNewGalTitle('');
         setNewGalDesc('');
@@ -1253,7 +1244,6 @@ void loop() {
       onConfirm: () => {
         const filtered = gallery.filter(g => g.id !== id);
         setGallery(filtered);
-        localStorage.setItem('robotika_db_gallery', JSON.stringify(filtered));
         triggerFeedback(`Foto Kegiatan "${title}" berhasil dihapus!`, 'info');
       },
       confirmText: 'Ya, Hapus',
@@ -1311,7 +1301,6 @@ void loop() {
           return n;
         });
         setNews(updated);
-        localStorage.setItem('robotika_db_news', JSON.stringify(updated));
         triggerFeedback(`Berita/Redaksi "${newNewsTitle}" berhasil diperbarui!`, 'success');
         cancelEditNews();
       } else {
@@ -1328,7 +1317,6 @@ void loop() {
         };
         const updated = [...news, newN];
         setNews(updated);
-        localStorage.setItem('robotika_db_news', JSON.stringify(updated));
         triggerFeedback(`Berita/Redaksi baru "${newNewsTitle}" berhasil diterbitkan!`, 'success');
         setNewNewsTitle('');
         setNewNewsSummary('');
@@ -1357,7 +1345,6 @@ void loop() {
       onConfirm: () => {
         const filtered = news.filter(n => n.id !== id);
         setNews(filtered);
-        localStorage.setItem('robotika_db_news', JSON.stringify(filtered));
         triggerFeedback(`Berita/Pengumuman "${title}" berhasil dihapus!`, 'info');
       },
       confirmText: 'Ya, Hapus',
@@ -1423,7 +1410,6 @@ void loop() {
           return p;
         });
         setProducts(updated);
-        localStorage.setItem('robotika_db_products', JSON.stringify(updated));
         triggerFeedback(`Data Riset Sasis/Produk "${newProdName}" berhasil diperbarui!`, 'success');
         cancelEditProduct();
       } else {
@@ -1441,7 +1427,6 @@ void loop() {
         };
         const updated = [...products, newP];
         setProducts(updated);
-        localStorage.setItem('robotika_db_products', JSON.stringify(updated));
         triggerFeedback(`Produk/Karya baru "${newProdName}" berhasil dirilis!`, 'success');
         setNewProdName('');
         setNewProdDesc('');
@@ -1472,7 +1457,6 @@ void loop() {
       onConfirm: () => {
         const filtered = products.filter(p => p.id !== id);
         setProducts(filtered);
-        localStorage.setItem('robotika_db_products', JSON.stringify(filtered));
         triggerFeedback(`Katalog Karya "${name}" berhasil dihapus!`, 'info');
       },
       confirmText: 'Ya, Hapus',
@@ -1494,7 +1478,6 @@ void loop() {
       return i;
     });
     setInventory(list);
-    localStorage.setItem('robotika_db_inventory', JSON.stringify(list));
   };
 
   // --- CRUD Support: Inventory (Add/Edit/Delete) ---
@@ -1547,7 +1530,6 @@ void loop() {
           return i;
         });
         setInventory(updated);
-        localStorage.setItem('robotika_db_inventory', JSON.stringify(updated));
         triggerFeedback(`Komponen "${newInvName}" berhasil diperbarui!`, 'success');
         cancelEditInventory();
       } else {
@@ -1562,7 +1544,6 @@ void loop() {
         };
         const updated = [...inventory, newI];
         setInventory(updated);
-        localStorage.setItem('robotika_db_inventory', JSON.stringify(updated));
         triggerFeedback(`Komponen baru "${newInvName}" berhasil didaftarkan!`, 'success');
         cancelEditInventory();
       }
@@ -1589,7 +1570,6 @@ void loop() {
       onConfirm: () => {
         const filtered = inventory.filter((i) => i.id !== id);
         setInventory(filtered);
-        localStorage.setItem('robotika_db_inventory', JSON.stringify(filtered));
         triggerFeedback(`Komponen "${name}" berhasil dihapus dari inventaris!`, 'info');
       },
       confirmText: 'Ya, Hapus',
@@ -5710,11 +5690,9 @@ void loop() {
                                 type="button"
                                 onClick={() => {
                                   const finalBg = bgChoice === 'custom' ? (customBgUrl || 'default-robot') : bgChoice;
-                                  localStorage.setItem('robotika_custom_background', finalBg);
-                                  localStorage.setItem('robotika_custom_primary_color', primaryColor);
-                                  localStorage.setItem('robotika_custom_secondary_color', secondaryColor);
-                                  localStorage.setItem('robotika_custom_logo', customLogoUrl);
-                                  window.dispatchEvent(new Event('robotika_theme_updated'));
+                                  if (onSaveThemeSettings) {
+                                    onSaveThemeSettings(finalBg, primaryColor, secondaryColor, customLogoUrl);
+                                  }
                                   triggerFeedback('Pengaturan Latar & Warna berhasil disimpan!', 'success');
                                 }}
                                 className="px-4 py-2 bg-brand-cyan hover:bg-brand-sky text-slate-950 font-bold text-xs rounded-xl flex items-center gap-1.5 cursor-pointer shadow-lg shadow-brand-cyan/10"

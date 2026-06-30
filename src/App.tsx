@@ -64,42 +64,10 @@ export default function App() {
   const [themeMode, setThemeMode] = useState<'dark' | 'light'>('dark');
 
   // Realtime Design Theme & Background Customization
-  const [customBg, setCustomBg] = useState(() => {
-    return localStorage.getItem('robotika_custom_background') || 'default-robot';
-  });
-  const [customPrimaryColor, setCustomPrimaryColor] = useState(() => {
-    return localStorage.getItem('robotika_custom_primary_color') || '#06B6D4';
-  });
-  const [customSecondaryColor, setCustomSecondaryColor] = useState(() => {
-    return localStorage.getItem('robotika_custom_secondary_color') || '#2563EB';
-  });
-
-  useEffect(() => {
-    const handleThemeChange = async () => {
-      const bg = localStorage.getItem('robotika_custom_background') || 'default-robot';
-      const primary = localStorage.getItem('robotika_custom_primary_color') || '#06B6D4';
-      const secondary = localStorage.getItem('robotika_custom_secondary_color') || '#2563EB';
-      const logo = localStorage.getItem('robotika_custom_logo') || '';
-
-      setCustomBg(bg);
-      setCustomPrimaryColor(primary);
-      setCustomSecondaryColor(secondary);
-
-      try {
-        await Promise.all([
-          fetch('/api/settings/background', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ value: bg }) }),
-          fetch('/api/settings/primary_color', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ value: primary }) }),
-          fetch('/api/settings/secondary_color', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ value: secondary }) }),
-          fetch('/api/settings/logo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ value: logo }) })
-        ]);
-      } catch (err) {
-        console.error("Error syncing theme config:", err);
-      }
-    };
-
-    window.addEventListener('robotika_theme_updated', handleThemeChange);
-    return () => window.removeEventListener('robotika_theme_updated', handleThemeChange);
-  }, []);
+  const [customBg, setCustomBg] = useState('default-robot');
+  const [customPrimaryColor, setCustomPrimaryColor] = useState('#06B6D4');
+  const [customSecondaryColor, setCustomSecondaryColor] = useState('#2563EB');
+  const [customLogo, setCustomLogo] = useState('');
 
   useEffect(() => {
     document.documentElement.style.setProperty('--color-brand-cyan', customPrimaryColor);
@@ -116,114 +84,20 @@ export default function App() {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
-  // CRUD State Collections initialized from localStorage or defaults
-  const [members, setMembers] = useState<Member[]>(() => {
-    try {
-      const saved = localStorage.getItem('robotika_db_members');
-      let list = saved ? JSON.parse(saved) : INITIAL_MEMBERS;
-      if (!list.some((m: any) => m.email === '4yik.romlah@gmail.com' || m.id === 'm0')) {
-        list = [
-          { id: "m0", name: "Ayik Romlah", class: "Guru - Staf", role: "Pembina", email: "4yik.romlah@gmail.com", joinedDate: "2016-06-15", interests: ["Embedded", "IoT", "Computer Vision"], username: "romlah", password: "password", memberType: "Senior" },
-          ...list
-        ];
-        localStorage.setItem('robotika_db_members', JSON.stringify(list));
-      }
-      return list;
-    } catch {
-      return INITIAL_MEMBERS;
-    }
-  });
-
-  const [inventory, setInventory] = useState<InventoryItem[]>(() => {
-    try {
-      const saved = localStorage.getItem('robotika_db_inventory');
-      return saved ? JSON.parse(saved) : INITIAL_INVENTORY;
-    } catch {
-      return INITIAL_INVENTORY;
-    }
-  });
-
-  const [programs, setPrograms] = useState<Program[]>(() => {
-    try {
-      const saved = localStorage.getItem('robotika_db_programs');
-      return saved ? JSON.parse(saved) : PROGRAMS_DATA;
-    } catch {
-      return PROGRAMS_DATA;
-    }
-  });
-
-  const [gallery, setGallery] = useState<ActivityImage[]>(() => {
-    try {
-      const saved = localStorage.getItem('robotika_db_gallery');
-      return saved ? JSON.parse(saved) : GALLERY_IMGS;
-    } catch {
-      return GALLERY_IMGS;
-    }
-  });
-
-  const [news, setNews] = useState<NewsItem[]>(() => {
-    try {
-      const saved = localStorage.getItem('robotika_db_news');
-      return saved ? JSON.parse(saved) : NEWS_DATA;
-    } catch {
-      return NEWS_DATA;
-    }
-  });
-
-  const [products, setProducts] = useState<ProductItem[]>(() => {
-    try {
-      const saved = localStorage.getItem('robotika_db_products');
-      return saved ? JSON.parse(saved) : PRODUCTS_DATA;
-    } catch {
-      return PRODUCTS_DATA;
-    }
-  });
+  // CRUD State Collections initialized from defaults (fresh data is loaded dynamically from Neon database)
+  const [members, setMembers] = useState<Member[]>(INITIAL_MEMBERS);
+  const [inventory, setInventory] = useState<InventoryItem[]>(INITIAL_INVENTORY);
+  const [programs, setPrograms] = useState<Program[]>(PROGRAMS_DATA);
+  const [gallery, setGallery] = useState<ActivityImage[]>(GALLERY_IMGS);
+  const [news, setNews] = useState<NewsItem[]>(NEWS_DATA);
+  const [products, setProducts] = useState<ProductItem[]>(PRODUCTS_DATA);
 
   // Editable/Customizable Landing Page Site Settings & Content
-  const [summary, setSummary] = useState(() => {
-    try {
-      const saved = localStorage.getItem('robotika_db_summary');
-      return saved ? JSON.parse(saved) : EXTRACURRICULAR_PROFILE;
-    } catch {
-      return EXTRACURRICULAR_PROFILE;
-    }
-  });
-
-  const [achievements, setAchievements] = useState(() => {
-    try {
-      const saved = localStorage.getItem('robotika_db_achievements');
-      return saved ? JSON.parse(saved) : GENERAL_ACHIEVEMENTS;
-    } catch {
-      return GENERAL_ACHIEVEMENTS;
-    }
-  });
-
-  const [visiMisi, setVisiMisi] = useState(() => {
-    try {
-      const saved = localStorage.getItem('robotika_db_visimisi');
-      return saved ? JSON.parse(saved) : null;
-    } catch {
-      return null;
-    }
-  });
-
-  const [generalInfo, setGeneralInfo] = useState(() => {
-    try {
-      const saved = localStorage.getItem('robotika_db_general_info');
-      return saved ? JSON.parse(saved) : "📢 INFO AKTIF: Kunjungan industri dan pameran karya robotika sasis pintar SMK Unggulan Teknologi akan dilangsungkan serentak pada tanggal 12 Juli 2026. Persiapkan modul line follower dan robot soccer roda Anda!";
-    } catch {
-      return "📢 INFO AKTIF: Kunjungan industri dan pameran karya robotika sasis pintar SMK Unggulan Teknologi akan dilangsungkan serentak pada tanggal 12 Juli 2026. Persiapkan modul line follower dan robot soccer roda Anda!";
-    }
-  });
-
-  const [publicServices, setPublicServices] = useState(() => {
-    try {
-      const saved = localStorage.getItem('robotika_db_services');
-      return saved ? JSON.parse(saved) : PUBLIC_SERVICES;
-    } catch {
-      return PUBLIC_SERVICES;
-    }
-  });
+  const [summary, setSummary] = useState(EXTRACURRICULAR_PROFILE);
+  const [achievements, setAchievements] = useState<any[]>(GENERAL_ACHIEVEMENTS);
+  const [visiMisi, setVisiMisi] = useState<any>(null);
+  const [generalInfo, setGeneralInfo] = useState<string>("📢 INFO AKTIF: Kunjungan industri dan pameran karya robotika sasis pintar SMK Unggulan Teknologi akan dilangsungkan serentak pada tanggal 12 Juli 2026. Persiapkan modul line follower dan robot soccer roda Anda!");
+  const [publicServices, setPublicServices] = useState<any[]>(PUBLIC_SERVICES);
 
   // --- NEON SQL DATABASE DYNAMIC FETCHERS & SYNC HANDLERS ---
   useEffect(() => {
@@ -258,64 +132,50 @@ export default function App() {
 
         if (Array.isArray(data.members)) {
           setMembers(data.members);
-          localStorage.setItem('robotika_db_members', JSON.stringify(data.members));
         }
         if (Array.isArray(data.inventory)) {
           setInventory(data.inventory);
-          localStorage.setItem('robotika_db_inventory', JSON.stringify(data.inventory));
         }
         if (Array.isArray(data.programs)) {
           setPrograms(data.programs);
-          localStorage.setItem('robotika_db_programs', JSON.stringify(data.programs));
         }
         if (Array.isArray(data.gallery)) {
           setGallery(data.gallery);
-          localStorage.setItem('robotika_db_gallery', JSON.stringify(data.gallery));
         }
         if (Array.isArray(data.news)) {
           setNews(data.news);
-          localStorage.setItem('robotika_db_news', JSON.stringify(data.news));
         }
         if (Array.isArray(data.products)) {
           setProducts(data.products);
-          localStorage.setItem('robotika_db_products', JSON.stringify(data.products));
         }
         if (Array.isArray(data.achievements)) {
           setAchievements(data.achievements);
-          localStorage.setItem('robotika_db_achievements', JSON.stringify(data.achievements));
         }
 
         const settings = data.settings || {};
         if (settings.profile) {
           setSummary(settings.profile);
-          localStorage.setItem('robotika_db_summary', JSON.stringify(settings.profile));
         }
         if (settings.visimisi !== undefined) {
           setVisiMisi(settings.visimisi);
-          localStorage.setItem('robotika_db_visimisi', JSON.stringify(settings.visimisi));
         }
         if (settings.general_info) {
           setGeneralInfo(settings.general_info);
-          localStorage.setItem('robotika_db_general_info', JSON.stringify(settings.general_info));
         }
         if (Array.isArray(settings.public_services)) {
           setPublicServices(settings.public_services);
-          localStorage.setItem('robotika_db_services', JSON.stringify(settings.public_services));
         }
         if (settings.background) {
           setCustomBg(settings.background);
-          localStorage.setItem('robotika_custom_background', settings.background);
         }
         if (settings.primary_color) {
           setCustomPrimaryColor(settings.primary_color);
-          localStorage.setItem('robotika_custom_primary_color', settings.primary_color);
         }
         if (settings.secondary_color) {
           setCustomSecondaryColor(settings.secondary_color);
-          localStorage.setItem('robotika_custom_secondary_color', settings.secondary_color);
         }
         if (settings.logo) {
-          localStorage.setItem('robotika_custom_logo', settings.logo);
+          setCustomLogo(settings.logo);
         }
       } catch (err) {
         console.error("Failed to load live data from Neon database:", err);
@@ -368,7 +228,6 @@ export default function App() {
     const prevList = members;
     const nextList = typeof value === 'function' ? value(prevList) : value;
     setMembers(nextList);
-    localStorage.setItem('robotika_db_members', JSON.stringify(nextList));
     setTimeout(() => {
       syncMembers(prevList, nextList);
     }, 0);
@@ -410,7 +269,6 @@ export default function App() {
     const prevList = inventory;
     const nextList = typeof value === 'function' ? value(prevList) : value;
     setInventory(nextList);
-    localStorage.setItem('robotika_db_inventory', JSON.stringify(nextList));
     setTimeout(() => {
       syncInventory(prevList, nextList);
     }, 0);
@@ -452,7 +310,6 @@ export default function App() {
     const prevList = programs;
     const nextList = typeof value === 'function' ? value(prevList) : value;
     setPrograms(nextList);
-    localStorage.setItem('robotika_db_programs', JSON.stringify(nextList));
     setTimeout(() => {
       syncPrograms(prevList, nextList);
     }, 0);
@@ -494,7 +351,6 @@ export default function App() {
     const prevList = gallery;
     const nextList = typeof value === 'function' ? value(prevList) : value;
     setGallery(nextList);
-    localStorage.setItem('robotika_db_gallery', JSON.stringify(nextList));
     setTimeout(() => {
       syncGallery(prevList, nextList);
     }, 0);
@@ -536,7 +392,6 @@ export default function App() {
     const prevList = news;
     const nextList = typeof value === 'function' ? value(prevList) : value;
     setNews(nextList);
-    localStorage.setItem('robotika_db_news', JSON.stringify(nextList));
     setTimeout(() => {
       syncNews(prevList, nextList);
     }, 0);
@@ -578,7 +433,6 @@ export default function App() {
     const prevList = products;
     const nextList = typeof value === 'function' ? value(prevList) : value;
     setProducts(nextList);
-    localStorage.setItem('robotika_db_products', JSON.stringify(nextList));
     setTimeout(() => {
       syncProducts(prevList, nextList);
     }, 0);
@@ -587,7 +441,6 @@ export default function App() {
   const handleSetSummary = async (value: any) => {
     setSummary(prev => {
       const next = typeof value === 'function' ? value(prev) : value;
-      localStorage.setItem('robotika_db_summary', JSON.stringify(next));
       fetch('/api/settings/profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -600,7 +453,6 @@ export default function App() {
   const handleSetAchievements = async (value: any) => {
     setAchievements(prev => {
       const next = typeof value === 'function' ? value(prev) : value;
-      localStorage.setItem('robotika_db_achievements', JSON.stringify(next));
       fetch('/api/achievements', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -613,7 +465,6 @@ export default function App() {
   const handleSetVisiMisi = async (value: any) => {
     setVisiMisi(prev => {
       const next = typeof value === 'function' ? value(prev) : value;
-      localStorage.setItem('robotika_db_visimisi', JSON.stringify(next));
       fetch('/api/settings/visimisi', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -626,7 +477,6 @@ export default function App() {
   const handleSetGeneralInfo = async (value: any) => {
     setGeneralInfo(prev => {
       const next = typeof value === 'function' ? value(prev) : value;
-      localStorage.setItem('robotika_db_general_info', JSON.stringify(next));
       fetch('/api/settings/general_info', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -639,7 +489,6 @@ export default function App() {
   const handleSetPublicServices = async (value: any) => {
     setPublicServices(prev => {
       const next = typeof value === 'function' ? value(prev) : value;
-      localStorage.setItem('robotika_db_services', JSON.stringify(next));
       fetch('/api/settings/public_services', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -647,6 +496,24 @@ export default function App() {
       }).catch(err => console.error("Error syncing services:", err));
       return next;
     });
+  };
+
+  const handleSaveThemeSettings = async (bg: string, primary: string, secondary: string, logo: string) => {
+    setCustomBg(bg);
+    setCustomPrimaryColor(primary);
+    setCustomSecondaryColor(secondary);
+    setCustomLogo(logo);
+
+    try {
+      await Promise.all([
+        fetch('/api/settings/background', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ value: bg }) }),
+        fetch('/api/settings/primary_color', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ value: primary }) }),
+        fetch('/api/settings/secondary_color', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ value: secondary }) }),
+        fetch('/api/settings/logo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ value: logo }) })
+      ]);
+    } catch (err) {
+      console.error("Error syncing theme config:", err);
+    }
   };
 
   // Auth & Session States
@@ -819,6 +686,7 @@ export default function App() {
         userRole={userData?.role}
         onLogout={handleLogout}
         onOpenLogin={() => handleNavigation('dashboard')}
+        customLogo={customLogo}
       />
 
       {/* DEVELOPER PLAYGROUND PREVIEW BAR */}
@@ -978,6 +846,11 @@ export default function App() {
                 generalInfo={generalInfo}
                 setGeneralInfo={handleSetGeneralInfo}
                 onAddToast={addToast}
+                customBg={customBg}
+                customPrimaryColor={customPrimaryColor}
+                customSecondaryColor={customSecondaryColor}
+                customLogo={customLogo}
+                onSaveThemeSettings={handleSaveThemeSettings}
               />
             </motion.div>
           ) : (
@@ -1003,6 +876,7 @@ export default function App() {
                 productsCount={products.length}
                 summary={summary}
                 achievements={achievements}
+                customLogo={customLogo}
               />
 
               {/* Visi & Misi Cards Column */}

@@ -14,6 +14,7 @@ interface OverviewProps {
   onDiscoverProductsClick: () => void;
   membersCount: number;
   productsCount: number;
+  customLogo?: string;
   summary?: {
     name: string;
     school: string;
@@ -44,20 +45,10 @@ export default function Overview({
   onDiscoverProductsClick, 
   membersCount, 
   productsCount,
+  customLogo = '',
   summary = EXTRACURRICULAR_PROFILE,
   achievements = GENERAL_ACHIEVEMENTS
 }: OverviewProps) {
-  const [customLogo, setCustomLogo] = useState(() => {
-    return localStorage.getItem('robotika_custom_logo') || '';
-  });
-
-  useEffect(() => {
-    const handleThemeChange = () => {
-      setCustomLogo(localStorage.getItem('robotika_custom_logo') || '');
-    };
-    window.addEventListener('robotika_theme_updated', handleThemeChange);
-    return () => window.removeEventListener('robotika_theme_updated', handleThemeChange);
-  }, []);
 
   const getStatIcon = (label: string) => {
     switch (label) {

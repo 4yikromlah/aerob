@@ -15,6 +15,7 @@ interface NavbarProps {
   userName?: string;
   onLogout: () => void;
   onOpenLogin: () => void;
+  customLogo?: string;
 }
 
 export default function Navbar({
@@ -25,12 +26,10 @@ export default function Navbar({
   userName,
   onLogout,
   onOpenLogin,
+  customLogo = '',
 }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [customLogo, setCustomLogo] = useState(() => {
-    return localStorage.getItem('robotika_custom_logo') || '';
-  });
 
   useEffect(() => {
     const handleScroll = () => {
@@ -42,14 +41,6 @@ export default function Navbar({
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  useEffect(() => {
-    const handleThemeChange = () => {
-      setCustomLogo(localStorage.getItem('robotika_custom_logo') || '');
-    };
-    window.addEventListener('robotika_theme_updated', handleThemeChange);
-    return () => window.removeEventListener('robotika_theme_updated', handleThemeChange);
   }, []);
 
   const menuItems = [
