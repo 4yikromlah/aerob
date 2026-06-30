@@ -628,7 +628,13 @@ router.get('/settings/:key', async (req, res) => {
     try {
       const rows = await sqlClient`SELECT value FROM settings WHERE key = ${key}`;
       if (rows.length > 0) {
-        const parsed = JSON.parse(rows[0].value);
+        let parsed;
+        try {
+          parsed = JSON.parse(rows[0].value);
+        } catch (e) {
+          // Fallback to the raw string if database contains un-stringified data
+          parsed = rows[0].value;
+        }
         res.json(parsed);
       } else {
         // Return default if not exists

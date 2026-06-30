@@ -72,9 +72,9 @@ export default function Navbar({
   return (
     <header
       id="navbar"
-      className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
+      className={`liquid-glass-header ${
         scrolled
-          ? 'bg-brand-navy/80 backdrop-blur-md border-b border-white/5 py-3 shadow-lg shadow-black/20'
+          ? 'scrolled-liquid py-3'
           : 'bg-transparent py-5'
       }`}
     >

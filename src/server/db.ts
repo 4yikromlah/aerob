@@ -250,10 +250,10 @@ export async function initDatabase() {
       await sqlClient`INSERT INTO settings (key, value) VALUES ('public_services', ${JSON.stringify(PUBLIC_SERVICES)})`;
       await sqlClient`INSERT INTO settings (key, value) VALUES ('visimisi', 'null')`;
       await sqlClient`INSERT INTO settings (key, value) VALUES ('general_info', ${JSON.stringify("📢 INFO AKTIF: Kunjungan industri dan pameran karya robotika sasis pintar SMK Unggulan Teknologi akan dilangsungkan serentak pada tanggal 12 Juli 2026. Persiapkan modul line follower dan robot soccer roda Anda!")})`;
-      await sqlClient`INSERT INTO settings (key, value) VALUES ('background', 'default-robot')`;
-      await sqlClient`INSERT INTO settings (key, value) VALUES ('primary_color', '#06B6D4')`;
-      await sqlClient`INSERT INTO settings (key, value) VALUES ('secondary_color', '#2563EB')`;
-      await sqlClient`INSERT INTO settings (key, value) VALUES ('logo', '')`;
+      await sqlClient`INSERT INTO settings (key, value) VALUES ('background', ${JSON.stringify('default-robot')})`;
+      await sqlClient`INSERT INTO settings (key, value) VALUES ('primary_color', ${JSON.stringify('#06B6D4')})`;
+      await sqlClient`INSERT INTO settings (key, value) VALUES ('secondary_color', ${JSON.stringify('#2563EB')})`;
+      await sqlClient`INSERT INTO settings (key, value) VALUES ('logo', ${JSON.stringify('')})`;
     }
 
     console.log("🎉 Neon SQL Database seeding finished successfully.");

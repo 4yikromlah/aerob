@@ -1,4 +1,9 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import React, { useState, useEffect } from 'react';
 import hitechBg from './assets/images/aerob_hitech_bg_1782468295698.jpg';
 import blueGridBg from './assets/images/hitech_blue_bg_1782427021437.jpg';
 import Navbar from './components/Navbar';
@@ -24,140 +29,37 @@ import LoadingScreen from './components/LoadingScreen';
 import Toast, { ToastMessage } from './components/Toast';
 
 import { motion, AnimatePresence } from 'motion/react';
-import {
-  Sparkles,
-  ArrowLeft,
-  UserCheck,
-  ArrowUp,
-  Settings,
-  AlertTriangle,
-  Terminal,
+import { 
+  Sparkles, 
+  ArrowLeft, 
+  UserCheck, 
+  ArrowUp, 
+  Settings, 
+  AlertTriangle, 
+  Terminal, 
   X,
   Play,
   Moon,
-  Sun,
-  Wifi,
-  WifiOff,
-  RefreshCw
+  Sun
 } from 'lucide-react';
 
 import { Program, ActivityImage, NewsItem, ProductItem, Member, InventoryItem } from './types';
-import {
-  PROGRAMS_DATA,
-  GALLERY_IMGS,
-  NEWS_DATA,
-  PRODUCTS_DATA,
-  INITIAL_MEMBERS,
+import { 
+  PROGRAMS_DATA, 
+  GALLERY_IMGS, 
+  NEWS_DATA, 
+  PRODUCTS_DATA, 
+  INITIAL_MEMBERS, 
   INITIAL_INVENTORY,
   EXTRACURRICULAR_PROFILE,
   GENERAL_ACHIEVEMENTS,
   PUBLIC_SERVICES
 } from './data/roboticsData';
 
-// ===========================================================================
-// KONSTAN & HELPER KONEKSI DATABASE
-// ===========================================================================
-
-/** Timeout default untuk request API (ms). */
-const API_TIMEOUT_MS = 10_000;
-
-/** Interval minimum antar re-fetch otomatis akibat window focus (ms). */
-const REFOCUS_REFETCH_MS = 5_000;
-
-/**
- * Fetch wrapper yang tahan banting:
- *  - Memakai AbortController + timeout agar tidak gantung selamanya.
- *  - Menangani respons non-JSON (mis. halaman error HTML) tanpa throw.
- *  - Mengembalikan `null` saat gagal, agar pemanggil tetap dapat melanjutkan.
- *
- * @param url  Endpoint API relatif, mis. `/api/members`.
- * @param init Opsi fetch standar (method, headers, body, ...).
- */
-async function apiFetch<T = any>(
-  url: string,
-  init: RequestInit = {}
-): Promise<T | null> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
-
-  try {
-    const res = await fetch(url, { ...init, signal: controller.signal });
-    if (!res.ok) {
-      console.warn(`[apiFetch] ${init.method || 'GET'} ${url} → HTTP ${res.status}`);
-      return null;
-    }
-
-    // Coba parse JSON; bila body kosong / non-JSON, kembalikan null (bukan throw).
-    const text = await res.text();
-    if (!text) return null;
-    try {
-      return JSON.parse(text) as T;
-    } catch {
-      console.warn(`[apiFetch] ${url} → respons bukan JSON valid, dilewatkan.`);
-      return null;
-    }
-  } catch (err: any) {
-    if (err?.name === 'AbortError') {
-      console.warn(`[apiFetch] ${url} → timeout ${API_TIMEOUT_MS}ms`);
-    } else {
-      console.warn(`[apiFetch] ${url} →`, err?.message || err);
-    }
-    return null;
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
-/**
- * Buka nilai setting yang biasanya dibungkus `{ value: ... }` oleh backend.
- * Tetap aman bila backend mengembalikan nilai mentah (string/array/object).
- */
-function unwrapSetting<T = any>(raw: any): T | null {
-  if (raw == null) return null;
-  if (typeof raw === 'object' && !Array.isArray(raw) && 'value' in raw) {
-    return (raw as { value: T }).value;
-  }
-  return raw as T;
-}
-
-/**
- * JSON.stringify dengan key terurut → diff stabil terhadap urutan properti.
- * Mencegah PUT tidak perlu yang dipicu hanya oleh perbedaan urutan key.
- */
-function stableStringify(value: any): string {
-  if (value === null || typeof value !== 'object') return JSON.stringify(value);
-  const sortKeys = (_: any, val: any) => {
-    if (val && typeof val === 'object' && !Array.isArray(val)) {
-      return Object.keys(val).sort().reduce<Record<string, any>>((acc, k) => {
-        acc[k] = val[k];
-        return acc;
-      }, {});
-    }
-    return val;
-  };
-  return JSON.stringify(value, sortKeys);
-}
-
-/** Tulis ke localStorage dengan aman (abaikan bila QuotaExceeded). */
-function safeLocalSet(key: string, value: any) {
-  try {
-    localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
-  } catch (err) {
-    console.warn(`[localStorage] gagal menulis ${key}:`, err);
-  }
-}
-
-// ===========================================================================
-// KOMPONEN UTAMA
-// ===========================================================================
-
 export default function App() {
   const [currentSection, setCurrentSection] = useState('beranda');
   const [isAppLoading, setIsAppLoading] = useState(true);
-
-  // Status koneksi database (memengaruhi UI: badge + tombol retry)
-  const [dbStatus, setDbStatus] = useState<'connecting' | 'online' | 'offline'>('connecting');
-
+  
   // Theme Toggle (Dark / Light)
   const [themeMode, setThemeMode] = useState<'dark' | 'light'>('dark');
 
@@ -183,20 +85,15 @@ export default function App() {
       setCustomPrimaryColor(primary);
       setCustomSecondaryColor(secondary);
 
-      // Sinkronisasi tema — pakai apiFetch + Promise.allSettled agar 1 endpoint
-      // gagal tidak membatalkan yang lain.
-      const headers = { 'Content-Type': 'application/json' };
-      const results = await Promise.allSettled([
-        apiFetch('/api/settings/background', { method: 'POST', headers, body: JSON.stringify({ value: bg }) }),
-        apiFetch('/api/settings/primary_color', { method: 'POST', headers, body: JSON.stringify({ value: primary }) }),
-        apiFetch('/api/settings/secondary_color', { method: 'POST', headers, body: JSON.stringify({ value: secondary }) }),
-        apiFetch('/api/settings/logo', { method: 'POST', headers, body: JSON.stringify({ value: logo }) })
-      ]);
-      const failedCount = results.filter(
-        r => r.status === 'rejected' || (r.status === 'fulfilled' && r.value === null)
-      ).length;
-      if (failedCount > 0) {
-        console.warn(`[theme] ${failedCount}/${results.length} endpoint gagal disinkronkan.`);
+      try {
+        await Promise.all([
+          fetch('/api/settings/background', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ value: bg }) }),
+          fetch('/api/settings/primary_color', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ value: primary }) }),
+          fetch('/api/settings/secondary_color', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ value: secondary }) }),
+          fetch('/api/settings/logo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ value: logo }) })
+        ]);
+      } catch (err) {
+        console.error("Error syncing theme config:", err);
       }
     };
 
@@ -219,7 +116,7 @@ export default function App() {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
-  // --- CRUD State Collections: hydrate dari localStorage atau default ---
+  // CRUD State Collections initialized from localStorage or defaults
   const [members, setMembers] = useState<Member[]>(() => {
     try {
       const saved = localStorage.getItem('robotika_db_members');
@@ -229,7 +126,7 @@ export default function App() {
           { id: "m0", name: "Ayik Romlah", class: "Guru - Staf", role: "Pembina", email: "4yik.romlah@gmail.com", joinedDate: "2016-06-15", interests: ["Embedded", "IoT", "Computer Vision"], username: "romlah", password: "password", memberType: "Senior" },
           ...list
         ];
-        safeLocalSet('robotika_db_members', list);
+        localStorage.setItem('robotika_db_members', JSON.stringify(list));
       }
       return list;
     } catch {
@@ -282,6 +179,7 @@ export default function App() {
     }
   });
 
+  // Editable/Customizable Landing Page Site Settings & Content
   const [summary, setSummary] = useState(() => {
     try {
       const saved = localStorage.getItem('robotika_db_summary');
@@ -327,336 +225,467 @@ export default function App() {
     }
   });
 
-  // Refs untuk dedup sinkronisasi paralel + debouncing refetch.
-  const syncInFlight = useRef<Record<string, boolean>>({});
-  const lastRefetchAt = useRef<number>(0);
-  const isMountedRef = useRef<boolean>(true);
-
+  // --- NEON SQL DATABASE DYNAMIC FETCHERS & SYNC HANDLERS ---
   useEffect(() => {
-    isMountedRef.current = true;
-    return () => { isMountedRef.current = false; };
-  }, []);
+    let isMounted = true;
 
-  // Helper toast notifications
-  const addToast = useCallback((text: string, type: 'success' | 'error' | 'info') => {
-    const id = Date.now().toString() + Math.random().toString();
-    setToasts((prev) => [...prev, { id, text, type }]);
-  }, []);
-
-  const handleDismissToast = (id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
-  };
-
-  // --- NEON SQL DATABASE: FETCH LIVE DATA ---
-  // Pakai Promise.allSettled: 1 endpoint gagal tidak menjatuhkan lainnya.
-  const fetchLiveData = useCallback(async (opts?: { silent?: boolean }) => {
-    if (!isMountedRef.current) return;
-    if (!opts?.silent) setDbStatus('connecting');
-
-    const results = await Promise.allSettled([
-      apiFetch<Member[]>('/api/members'),
-      apiFetch<InventoryItem[]>('/api/inventory'),
-      apiFetch<Program[]>('/api/programs'),
-      apiFetch<ActivityImage[]>('/api/gallery'),
-      apiFetch<NewsItem[]>('/api/news'),
-      apiFetch<ProductItem[]>('/api/products'),
-      apiFetch<any[]>('/api/achievements'),
-      apiFetch('/api/settings/profile'),
-      apiFetch('/api/settings/visimisi'),
-      apiFetch('/api/settings/general_info'),
-      apiFetch('/api/settings/public_services'),
-      apiFetch('/api/settings/background'),
-      apiFetch('/api/settings/primary_color'),
-      apiFetch('/api/settings/secondary_color'),
-      apiFetch('/api/settings/logo')
-    ]);
-
-    if (!isMountedRef.current) return;
-
-    const got = <T,>(r: PromiseSettledResult<T | null>): T | null =>
-      r.status === 'fulfilled' ? r.value : null;
-
-    const [
-      membersRes, inventoryRes, programsRes, galleryRes, newsRes, productsRes,
-      achievementsRes, summaryRes, visimisiRes, generalInfoRes, servicesRes,
-      customBgRes, customPrimaryRes, customSecondaryRes, customLogoRes
-    ] = results;
-
-    let successCount = 0;
-
-    // Array resources
-    if (Array.isArray(got(membersRes)))      { setMembers(got(membersRes)!);          safeLocalSet('robotika_db_members', got(membersRes));          successCount++; }
-    if (Array.isArray(got(inventoryRes)))    { setInventory(got(inventoryRes)!);      safeLocalSet('robotika_db_inventory', got(inventoryRes));      successCount++; }
-    if (Array.isArray(got(programsRes)))     { setPrograms(got(programsRes)!);        safeLocalSet('robotika_db_programs', got(programsRes));        successCount++; }
-    if (Array.isArray(got(galleryRes)))      { setGallery(got(galleryRes)!);          safeLocalSet('robotika_db_gallery', got(galleryRes));          successCount++; }
-    if (Array.isArray(got(newsRes)))         { setNews(got(newsRes)!);                safeLocalSet('robotika_db_news', got(newsRes));                successCount++; }
-    if (Array.isArray(got(productsRes)))     { setProducts(got(productsRes)!);        safeLocalSet('robotika_db_products', got(productsRes));        successCount++; }
-    if (Array.isArray(got(achievementsRes))) { setAchievements(got(achievementsRes)!);safeLocalSet('robotika_db_achievements', got(achievementsRes));successCount++; }
-    if (Array.isArray(got(servicesRes)))     { setPublicServices(got(servicesRes)!);  safeLocalSet('robotika_db_services', got(servicesRes));        successCount++; }
-
-    // Object / scalar resources — unwrap { value } bila perlu
-    const summaryVal = unwrapSetting(got(summaryRes));
-    if (summaryVal) { setSummary(summaryVal); safeLocalSet('robotika_db_summary', summaryVal); successCount++; }
-
-    const visimisiVal = unwrapSetting(got(visimisiRes));
-    if (visimisiVal !== null && visimisiVal !== undefined) {
-      setVisiMisi(visimisiVal);
-      safeLocalSet('robotika_db_visimisi', visimisiVal);
-      successCount++;
-    }
-
-    const generalInfoVal = unwrapSetting(got(generalInfoRes));
-    if (generalInfoVal) { setGeneralInfo(generalInfoVal); safeLocalSet('robotika_db_general_info', generalInfoVal); successCount++; }
-
-    const bgVal = unwrapSetting<string>(got(customBgRes));
-    if (bgVal) { setCustomBg(bgVal); safeLocalSet('robotika_custom_background', bgVal); successCount++; }
-
-    const primVal = unwrapSetting<string>(got(customPrimaryRes));
-    if (primVal) { setCustomPrimaryColor(primVal); safeLocalSet('robotika_custom_primary_color', primVal); successCount++; }
-
-    const secVal = unwrapSetting<string>(got(customSecondaryRes));
-    if (secVal) { setCustomSecondaryColor(secVal); safeLocalSet('robotika_custom_secondary_color', secVal); successCount++; }
-
-    const logoVal = unwrapSetting<string>(got(customLogoRes));
-    if (logoVal) { safeLocalSet('robotika_custom_logo', logoVal); successCount++; }
-
-    // Putuskan status koneksi berdasar jumlah endpoint yang berhasil.
-    const totalExpected = results.length;
-    if (successCount === 0) {
-      setDbStatus('offline');
-      if (!opts?.silent) addToast('Tidak dapat terhubung ke database. Menampilkan data cache lokal.', 'error');
-    } else if (successCount < totalExpected) {
-      setDbStatus('online'); // sebagian berhasil tetap dianggap online
-      if (!opts?.silent) addToast(`${successCount}/${totalExpected} endpoint database berhasil dimuat.`, 'info');
-    } else {
-      setDbStatus('online');
-    }
-
-    setIsAppLoading(false);
-    lastRefetchAt.current = Date.now();
-  }, [addToast]);
-
-  // Fetch pertama saat mount
-  useEffect(() => {
-    fetchLiveData();
-  }, [fetchLiveData]);
-
-  // Re-fetch saat window kembali focus (debounced) — untuk sesi multi-user panjang.
-  useEffect(() => {
-    const onFocus = () => {
-      const now = Date.now();
-      if (now - lastRefetchAt.current < REFOCUS_REFETCH_MS) return;
-      fetchLiveData({ silent: true });
-    };
-    window.addEventListener('focus', onFocus);
-    return () => window.removeEventListener('focus', onFocus);
-  }, [fetchLiveData]);
-
-  // Re-fetch saat koneksi internet pulih
-  useEffect(() => {
-    const onOnline = () => {
-      addToast('Koneksi internet pulih. Mengsinkronkan ulang data...', 'info');
-      fetchLiveData({ silent: true });
-    };
-    window.addEventListener('online', onOnline);
-    return () => window.removeEventListener('online', onOnline);
-  }, [fetchLiveData, addToast]);
-
-  // --- GENERIC SYNC HELPER (paralel + dedup) ---
-  // Membuat diff create/update/delete terhadap state sebelumnya, lalu
-  // menjalankan request API secara paralel. Setiap kegagalan diberi tahu via toast.
-  const makeSyncList = useCallback(<T extends { id: string }>(opts: {
-    endpoint: string;
-    prev: T[];
-    next: T[];
-    label: string;
-  }) => {
-    return async () => {
-      const { endpoint, prev, next, label } = opts;
-      const dedupKey = endpoint;
-      if (syncInFlight.current[dedupKey]) {
-        // Sudah ada sync berjalan untuk endpoint ini → skip untuk menghindari race.
-        return;
-      }
-      syncInFlight.current[dedupKey] = true;
-
+    const fetchSafe = async (url: string) => {
       try {
-        const prevMap = new Map(prev.map(m => [m.id, m]));
-        const nextMap = new Map(next.map(m => [m.id, m]));
-
-        const headers = { 'Content-Type': 'application/json' };
-        const tasks: Promise<any>[] = [];
-
-        for (const item of next) {
-          const prevItem = prevMap.get(item.id);
-          if (!prevItem) {
-            tasks.push(apiFetch(endpoint, {
-              method: 'POST',
-              headers,
-              body: JSON.stringify(item)
-            }));
-          } else if (stableStringify(prevItem) !== stableStringify(item)) {
-            tasks.push(apiFetch(`${endpoint}/${item.id}`, {
-              method: 'PUT',
-              headers,
-              body: JSON.stringify(item)
-            }));
-          }
+        const res = await fetch(url);
+        if (!res.ok) {
+          console.warn(`[FETCH SAFE] Non-ok response from ${url}: status ${res.status}`);
+          return null;
         }
+        return await res.json();
+      } catch (err) {
+        console.error(`[FETCH SAFE] Network or parse error for ${url}:`, err);
+        return null;
+      }
+    };
 
-        for (const item of prev) {
-          if (!nextMap.has(item.id)) {
-            tasks.push(apiFetch(`${endpoint}/${item.id}`, { method: 'DELETE' }));
-          }
+    const fetchLiveData = async () => {
+      try {
+        const [
+          membersRes,
+          inventoryRes,
+          programsRes,
+          galleryRes,
+          newsRes,
+          productsRes,
+          achievementsRes,
+          summaryRes,
+          visimisiRes,
+          generalInfoRes,
+          servicesRes,
+          customBgRes,
+          customPrimaryRes,
+          customSecondaryRes,
+          customLogoRes
+        ] = await Promise.all([
+          fetchSafe('/api/members'),
+          fetchSafe('/api/inventory'),
+          fetchSafe('/api/programs'),
+          fetchSafe('/api/gallery'),
+          fetchSafe('/api/news'),
+          fetchSafe('/api/products'),
+          fetchSafe('/api/achievements'),
+          fetchSafe('/api/settings/profile'),
+          fetchSafe('/api/settings/visimisi'),
+          fetchSafe('/api/settings/general_info'),
+          fetchSafe('/api/settings/public_services'),
+          fetchSafe('/api/settings/background'),
+          fetchSafe('/api/settings/primary_color'),
+          fetchSafe('/api/settings/secondary_color'),
+          fetchSafe('/api/settings/logo')
+        ]);
+
+        if (!isMounted) return;
+
+        if (Array.isArray(membersRes)) {
+          setMembers(membersRes);
+          localStorage.setItem('robotika_db_members', JSON.stringify(membersRes));
         }
-
-        const results = await Promise.allSettled(tasks);
-        const failed = results.filter(
-          r => r.status === 'rejected' || (r.status === 'fulfilled' && r.value === null)
-        );
-        if (failed.length > 0) {
-          addToast(`Gagal menyinkronkan ${failed.length} perubahan ${label} ke database.`, 'error');
+        if (Array.isArray(inventoryRes)) {
+          setInventory(inventoryRes);
+          localStorage.setItem('robotika_db_inventory', JSON.stringify(inventoryRes));
+        }
+        if (Array.isArray(programsRes)) {
+          setPrograms(programsRes);
+          localStorage.setItem('robotika_db_programs', JSON.stringify(programsRes));
+        }
+        if (Array.isArray(galleryRes)) {
+          setGallery(galleryRes);
+          localStorage.setItem('robotika_db_gallery', JSON.stringify(galleryRes));
+        }
+        if (Array.isArray(newsRes)) {
+          setNews(newsRes);
+          localStorage.setItem('robotika_db_news', JSON.stringify(newsRes));
+        }
+        if (Array.isArray(productsRes)) {
+          setProducts(productsRes);
+          localStorage.setItem('robotika_db_products', JSON.stringify(productsRes));
+        }
+        if (Array.isArray(achievementsRes)) {
+          setAchievements(achievementsRes);
+          localStorage.setItem('robotika_db_achievements', JSON.stringify(achievementsRes));
+        }
+        if (summaryRes) {
+          setSummary(summaryRes);
+          localStorage.setItem('robotika_db_summary', JSON.stringify(summaryRes));
+        }
+        if (visimisiRes !== null && visimisiRes !== undefined) {
+          setVisiMisi(visimisiRes);
+          localStorage.setItem('robotika_db_visimisi', JSON.stringify(visimisiRes));
+        }
+        if (generalInfoRes) {
+          setGeneralInfo(generalInfoRes);
+          localStorage.setItem('robotika_db_general_info', JSON.stringify(generalInfoRes));
+        }
+        if (Array.isArray(servicesRes)) {
+          setPublicServices(servicesRes);
+          localStorage.setItem('robotika_db_services', JSON.stringify(servicesRes));
+        }
+        
+        if (customBgRes) {
+          setCustomBg(customBgRes);
+          localStorage.setItem('robotika_custom_background', customBgRes);
+        }
+        if (customPrimaryRes) {
+          setCustomPrimaryColor(customPrimaryRes);
+          localStorage.setItem('robotika_custom_primary_color', customPrimaryRes);
+        }
+        if (customSecondaryRes) {
+          setCustomSecondaryColor(customSecondaryRes);
+          localStorage.setItem('robotika_custom_secondary_color', customSecondaryRes);
+        }
+        if (customLogoRes) {
+          localStorage.setItem('robotika_custom_logo', customLogoRes);
         }
       } catch (err) {
-        console.error(`[sync:${label}]`, err);
-        addToast(`Kesalahan tak terduga saat sync ${label}.`, 'error');
+        console.error("Failed to load live data from Neon database:", err);
       } finally {
-        syncInFlight.current[dedupKey] = false;
+        if (isMounted) {
+          setIsAppLoading(false);
+        }
       }
     };
-  }, [addToast]);
 
-  // --- WRAPPER setMembers / setInventory / ... ---
-  // Versi baru: tangkap prev & next secara eksplisit lewat functional update,
-  // lalu jalankan sync dengan referensi prev yang benar (menghindari closure stale).
+    fetchLiveData();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const syncMembers = async (prevList: Member[], nextList: Member[]) => {
+    try {
+      const prevMap = new Map(prevList.map(m => [m.id, m]));
+      const nextMap = new Map(nextList.map(m => [m.id, m]));
+
+      for (const item of nextList) {
+        const prev = prevMap.get(item.id);
+        if (!prev) {
+          await fetch('/api/members', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(item)
+          });
+        } else if (JSON.stringify(prev) !== JSON.stringify(item)) {
+          await fetch(`/api/members/${item.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(item)
+          });
+        }
+      }
+
+      for (const item of prevList) {
+        if (!nextMap.has(item.id)) {
+          await fetch(`/api/members/${item.id}`, { method: 'DELETE' });
+        }
+      }
+    } catch (err) {
+      console.error("Error syncing members:", err);
+    }
+  };
+
   const handleSetMembers = (value: Member[] | ((prev: Member[]) => Member[])) => {
-    setMembers(prev => {
-      const next = typeof value === 'function' ? (value as any)(prev) : value;
-      safeLocalSet('robotika_db_members', next);
-      makeSyncList<Member>({ endpoint: '/api/members', prev, next, label: 'anggota' })();
-      return next;
-    });
+    const prevList = members;
+    const nextList = typeof value === 'function' ? value(prevList) : value;
+    setMembers(nextList);
+    localStorage.setItem('robotika_db_members', JSON.stringify(nextList));
+    setTimeout(() => {
+      syncMembers(prevList, nextList);
+    }, 0);
+  };
+
+  const syncInventory = async (prevList: InventoryItem[], nextList: InventoryItem[]) => {
+    try {
+      const prevMap = new Map(prevList.map(m => [m.id, m]));
+      const nextMap = new Map(nextList.map(m => [m.id, m]));
+
+      for (const item of nextList) {
+        const prev = prevMap.get(item.id);
+        if (!prev) {
+          await fetch('/api/inventory', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(item)
+          });
+        } else if (JSON.stringify(prev) !== JSON.stringify(item)) {
+          await fetch(`/api/inventory/${item.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(item)
+          });
+        }
+      }
+
+      for (const item of prevList) {
+        if (!nextMap.has(item.id)) {
+          await fetch(`/api/inventory/${item.id}`, { method: 'DELETE' });
+        }
+      }
+    } catch (err) {
+      console.error("Error syncing inventory:", err);
+    }
   };
 
   const handleSetInventory = (value: InventoryItem[] | ((prev: InventoryItem[]) => InventoryItem[])) => {
-    setInventory(prev => {
-      const next = typeof value === 'function' ? (value as any)(prev) : value;
-      safeLocalSet('robotika_db_inventory', next);
-      makeSyncList<InventoryItem>({ endpoint: '/api/inventory', prev, next, label: 'inventaris' })();
-      return next;
-    });
+    const prevList = inventory;
+    const nextList = typeof value === 'function' ? value(prevList) : value;
+    setInventory(nextList);
+    localStorage.setItem('robotika_db_inventory', JSON.stringify(nextList));
+    setTimeout(() => {
+      syncInventory(prevList, nextList);
+    }, 0);
+  };
+
+  const syncPrograms = async (prevList: Program[], nextList: Program[]) => {
+    try {
+      const prevMap = new Map(prevList.map(m => [m.id, m]));
+      const nextMap = new Map(nextList.map(m => [m.id, m]));
+
+      for (const item of nextList) {
+        const prev = prevMap.get(item.id);
+        if (!prev) {
+          await fetch('/api/programs', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(item)
+          });
+        } else if (JSON.stringify(prev) !== JSON.stringify(item)) {
+          await fetch(`/api/programs/${item.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(item)
+          });
+        }
+      }
+
+      for (const item of prevList) {
+        if (!nextMap.has(item.id)) {
+          await fetch(`/api/programs/${item.id}`, { method: 'DELETE' });
+        }
+      }
+    } catch (err) {
+      console.error("Error syncing programs:", err);
+    }
   };
 
   const handleSetPrograms = (value: Program[] | ((prev: Program[]) => Program[])) => {
-    setPrograms(prev => {
-      const next = typeof value === 'function' ? (value as any)(prev) : value;
-      safeLocalSet('robotika_db_programs', next);
-      makeSyncList<Program>({ endpoint: '/api/programs', prev, next, label: 'program' })();
-      return next;
-    });
+    const prevList = programs;
+    const nextList = typeof value === 'function' ? value(prevList) : value;
+    setPrograms(nextList);
+    localStorage.setItem('robotika_db_programs', JSON.stringify(nextList));
+    setTimeout(() => {
+      syncPrograms(prevList, nextList);
+    }, 0);
+  };
+
+  const syncGallery = async (prevList: ActivityImage[], nextList: ActivityImage[]) => {
+    try {
+      const prevMap = new Map(prevList.map(m => [m.id, m]));
+      const nextMap = new Map(nextList.map(m => [m.id, m]));
+
+      for (const item of nextList) {
+        const prev = prevMap.get(item.id);
+        if (!prev) {
+          await fetch('/api/gallery', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(item)
+          });
+        } else if (JSON.stringify(prev) !== JSON.stringify(item)) {
+          await fetch(`/api/gallery/${item.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(item)
+          });
+        }
+      }
+
+      for (const item of prevList) {
+        if (!nextMap.has(item.id)) {
+          await fetch(`/api/gallery/${item.id}`, { method: 'DELETE' });
+        }
+      }
+    } catch (err) {
+      console.error("Error syncing gallery:", err);
+    }
   };
 
   const handleSetGallery = (value: ActivityImage[] | ((prev: ActivityImage[]) => ActivityImage[])) => {
-    setGallery(prev => {
-      const next = typeof value === 'function' ? (value as any)(prev) : value;
-      safeLocalSet('robotika_db_gallery', next);
-      makeSyncList<ActivityImage>({ endpoint: '/api/gallery', prev, next, label: 'galeri' })();
-      return next;
-    });
+    const prevList = gallery;
+    const nextList = typeof value === 'function' ? value(prevList) : value;
+    setGallery(nextList);
+    localStorage.setItem('robotika_db_gallery', JSON.stringify(nextList));
+    setTimeout(() => {
+      syncGallery(prevList, nextList);
+    }, 0);
+  };
+
+  const syncNews = async (prevList: NewsItem[], nextList: NewsItem[]) => {
+    try {
+      const prevMap = new Map(prevList.map(m => [m.id, m]));
+      const nextMap = new Map(nextList.map(m => [m.id, m]));
+
+      for (const item of nextList) {
+        const prev = prevMap.get(item.id);
+        if (!prev) {
+          await fetch('/api/news', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(item)
+          });
+        } else if (JSON.stringify(prev) !== JSON.stringify(item)) {
+          await fetch(`/api/news/${item.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(item)
+          });
+        }
+      }
+
+      for (const item of prevList) {
+        if (!nextMap.has(item.id)) {
+          await fetch(`/api/news/${item.id}`, { method: 'DELETE' });
+        }
+      }
+    } catch (err) {
+      console.error("Error syncing news:", err);
+    }
   };
 
   const handleSetNews = (value: NewsItem[] | ((prev: NewsItem[]) => NewsItem[])) => {
-    setNews(prev => {
-      const next = typeof value === 'function' ? (value as any)(prev) : value;
-      safeLocalSet('robotika_db_news', next);
-      makeSyncList<NewsItem>({ endpoint: '/api/news', prev, next, label: 'berita' })();
-      return next;
-    });
+    const prevList = news;
+    const nextList = typeof value === 'function' ? value(prevList) : value;
+    setNews(nextList);
+    localStorage.setItem('robotika_db_news', JSON.stringify(nextList));
+    setTimeout(() => {
+      syncNews(prevList, nextList);
+    }, 0);
+  };
+
+  const syncProducts = async (prevList: ProductItem[], nextList: ProductItem[]) => {
+    try {
+      const prevMap = new Map(prevList.map(m => [m.id, m]));
+      const nextMap = new Map(nextList.map(m => [m.id, m]));
+
+      for (const item of nextList) {
+        const prev = prevMap.get(item.id);
+        if (!prev) {
+          await fetch('/api/products', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(item)
+          });
+        } else if (JSON.stringify(prev) !== JSON.stringify(item)) {
+          await fetch(`/api/products/${item.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(item)
+          });
+        }
+      }
+
+      for (const item of prevList) {
+        if (!nextMap.has(item.id)) {
+          await fetch(`/api/products/${item.id}`, { method: 'DELETE' });
+        }
+      }
+    } catch (err) {
+      console.error("Error syncing products:", err);
+    }
   };
 
   const handleSetProducts = (value: ProductItem[] | ((prev: ProductItem[]) => ProductItem[])) => {
-    setProducts(prev => {
-      const next = typeof value === 'function' ? (value as any)(prev) : value;
-      safeLocalSet('robotika_db_products', next);
-      makeSyncList<ProductItem>({ endpoint: '/api/products', prev, next, label: 'produk' })();
-      return next;
-    });
+    const prevList = products;
+    const nextList = typeof value === 'function' ? value(prevList) : value;
+    setProducts(nextList);
+    localStorage.setItem('robotika_db_products', JSON.stringify(nextList));
+    setTimeout(() => {
+      syncProducts(prevList, nextList);
+    }, 0);
   };
 
-  // --- SETTINGS (single-object): selalu bungkus { value } saat POST ---
-  const handleSetSummary = (value: any) => {
+  const handleSetSummary = async (value: any) => {
     setSummary(prev => {
-      const next = typeof value === 'function' ? (value as any)(prev) : value;
-      safeLocalSet('robotika_db_summary', next);
-      apiFetch('/api/settings/profile', {
+      const next = typeof value === 'function' ? value(prev) : value;
+      localStorage.setItem('robotika_db_summary', JSON.stringify(next));
+      fetch('/api/settings/profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ value: next })
-      }).then(r => { if (r === null) addToast('Gagal menyimpan profil ke database.', 'error'); });
+      }).catch(err => console.error("Error syncing summary:", err));
       return next;
     });
   };
 
-  const handleSetAchievements = (value: any) => {
+  const handleSetAchievements = async (value: any) => {
     setAchievements(prev => {
-      const next = typeof value === 'function' ? (value as any)(prev) : value;
-      safeLocalSet('robotika_db_achievements', next);
-      // Catatan: endpoint /api/achievements menerima array mentah (bukan {value}).
-      apiFetch('/api/achievements', {
+      const next = typeof value === 'function' ? value(prev) : value;
+      localStorage.setItem('robotika_db_achievements', JSON.stringify(next));
+      fetch('/api/achievements', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(next)
-      }).then(r => { if (r === null) addToast('Gagal menyimpan prestasi ke database.', 'error'); });
+      }).catch(err => console.error("Error syncing achievements:", err));
       return next;
     });
   };
 
-  const handleSetVisiMisi = (value: any) => {
+  const handleSetVisiMisi = async (value: any) => {
     setVisiMisi(prev => {
-      const next = typeof value === 'function' ? (value as any)(prev) : value;
-      safeLocalSet('robotika_db_visimisi', next);
-      apiFetch('/api/settings/visimisi', {
+      const next = typeof value === 'function' ? value(prev) : value;
+      localStorage.setItem('robotika_db_visimisi', JSON.stringify(next));
+      fetch('/api/settings/visimisi', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ value: next })
-      }).then(r => { if (r === null) addToast('Gagal menyimpan visi-misi ke database.', 'error'); });
+      }).catch(err => console.error("Error syncing visimisi:", err));
       return next;
     });
   };
 
-  const handleSetGeneralInfo = (value: any) => {
+  const handleSetGeneralInfo = async (value: any) => {
     setGeneralInfo(prev => {
-      const next = typeof value === 'function' ? (value as any)(prev) : value;
-      safeLocalSet('robotika_db_general_info', next);
-      apiFetch('/api/settings/general_info', {
+      const next = typeof value === 'function' ? value(prev) : value;
+      localStorage.setItem('robotika_db_general_info', JSON.stringify(next));
+      fetch('/api/settings/general_info', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ value: next })
-      }).then(r => { if (r === null) addToast('Gagal menyimpan info umum ke database.', 'error'); });
+      }).catch(err => console.error("Error syncing general_info:", err));
       return next;
     });
   };
 
-  const handleSetPublicServices = (value: any) => {
+  const handleSetPublicServices = async (value: any) => {
     setPublicServices(prev => {
-      const next = typeof value === 'function' ? (value as any)(prev) : value;
-      safeLocalSet('robotika_db_services', next);
-      apiFetch('/api/settings/public_services', {
+      const next = typeof value === 'function' ? value(prev) : value;
+      localStorage.setItem('robotika_db_services', JSON.stringify(next));
+      fetch('/api/settings/public_services', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ value: next })
-      }).then(r => { if (r === null) addToast('Gagal menyimpan layanan publik ke database.', 'error'); });
+      }).catch(err => console.error("Error syncing services:", err));
       return next;
     });
   };
 
   // Auth & Session States
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
-  const [userData, setUserData] = useState<{ name: string; role: string; memberType?: 'Pemula' | 'Junior' | 'Senior' } | null>({
-    name: 'Ayik Romlah',
-    role: 'Pembina',
-    memberType: 'Senior'
-  });
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userData, setUserData] = useState<{ name: string; role: string; memberType?: 'Pemula' | 'Junior' | 'Senior' } | null>(null);
+
+  // Helper to add toast notifications
+  const addToast = (text: string, type: 'success' | 'error' | 'info') => {
+    const id = Date.now().toString() + Math.random().toString();
+    setToasts((prev) => [...prev, { id, text, type }]);
+  };
+
+  const handleDismissToast = (id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  };
 
   // Theme effects trigger
   const toggleTheme = () => {
@@ -668,17 +697,21 @@ export default function App() {
   // Scroll effects (Progress Bar & Scroll-To-Top trigger)
   useEffect(() => {
     const handleScroll = () => {
+      // Calculate Scroll Progress Percentage
       const totalScroll = document.documentElement.scrollHeight - window.innerHeight;
       if (totalScroll > 0) {
         const progress = (window.scrollY / totalScroll) * 100;
         setScrollProgress(progress);
       }
+
+      // Toggle Scroll To Top Visibility
       if (window.scrollY > 400) {
         setShowScrollTop(true);
       } else {
         setShowScrollTop(false);
       }
     };
+
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -687,13 +720,16 @@ export default function App() {
   useEffect(() => {
     const handleScrollHighlight = () => {
       if (currentSection === 'dashboard' || simulateView !== 'none') return;
+
       const sections = ['beranda', 'ringkasan', 'vision', 'programs', 'gallery', 'news', 'services', 'products', 'learning'];
-      const scrollPosition = window.scrollY + 200;
+      const scrollPosition = window.scrollY + 200; // Offset for sticky navbar of 80px + padding
+
       for (const sectionId of sections) {
         const element = document.getElementById(sectionId);
         if (element) {
           const offsetTop = element.offsetTop;
           const offsetHeight = element.offsetHeight;
+
           if (scrollPosition >= offsetTop && scrollPosition < offsetTop + offsetHeight) {
             setCurrentSection(sectionId);
             break;
@@ -701,24 +737,32 @@ export default function App() {
         }
       }
     };
+
     window.addEventListener('scroll', handleScrollHighlight);
     return () => window.removeEventListener('scroll', handleScrollHighlight);
   }, [currentSection, simulateView]);
 
+  // Navigate function (scrolls or switches view)
   const handleNavigation = (sectionId: string) => {
-    setSimulateView('none');
+    setSimulateView('none'); // Clear simulations if navigated
     setCurrentSection(sectionId);
+
     if (sectionId === 'dashboard') {
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
+
     const element = document.getElementById(sectionId);
     if (element) {
       const offsetTop = element.getBoundingClientRect().top + window.scrollY - 80;
-      window.scrollTo({ top: offsetTop, behavior: 'smooth' });
+      window.scrollTo({
+        top: offsetTop,
+        behavior: 'smooth',
+      });
     }
   };
 
+  // Session triggers
   const handleLoginSuccess = (user: { name: string; role: string; memberType?: 'Pemula' | 'Junior' | 'Senior' }) => {
     setIsLoggedIn(true);
     setUserData(user);
@@ -740,11 +784,6 @@ export default function App() {
     addToast('Kembali ke puncak orbit.', 'info');
   };
 
-  const handleManualRetry = () => {
-    addToast('Mencoba menghubungi ulang database...', 'info');
-    fetchLiveData();
-  };
-
   const getBgUrl = () => {
     if (customBg === 'default-robot') return hitechBg;
     if (customBg === 'blue-grid') return blueGridBg;
@@ -755,10 +794,10 @@ export default function App() {
   const activeBgImage = getBgUrl();
 
   return (
-    <div
+    <div 
       className={`min-h-screen relative font-sans select-none antialiased transition-colors duration-300 ${themeMode === 'light' ? 'theme-light bg-[#bae6fd] text-slate-800' : 'theme-dark bg-[#0B0F19] text-slate-100'} ${activeBgImage ? 'has-custom-bg' : ''}`}
       style={{
-        backgroundImage: activeBgImage
+        backgroundImage: activeBgImage 
           ? (themeMode === 'light'
             ? `linear-gradient(to bottom, rgba(186, 230, 253, 0.55), rgba(186, 230, 253, 0.75)), url(${activeBgImage})`
             : `linear-gradient(to bottom, rgba(11, 15, 25, 0.45), rgba(11, 15, 25, 0.65)), url(${activeBgImage})`)
@@ -769,36 +808,11 @@ export default function App() {
         backgroundRepeat: 'no-repeat',
       }}
     >
-
+      
+      {/* Animated Desktop Cursor Trail */}
       <AnimatedCursor />
 
-      {/* DB Connection Status Badge (kanan atas) */}
-      <div className="fixed top-20 right-4 z-[60] flex items-center gap-2 bg-slate-950/90 border border-white/10 rounded-full px-3 py-1.5 backdrop-blur-md shadow-lg">
-        {dbStatus === 'online' ? (
-          <>
-            <Wifi className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="text-[10px] font-mono font-bold text-emerald-400 uppercase tracking-wider">DB Online</span>
-          </>
-        ) : dbStatus === 'offline' ? (
-          <>
-            <WifiOff className="w-3.5 h-3.5 text-red-400" />
-            <span className="text-[10px] font-mono font-bold text-red-400 uppercase tracking-wider">DB Offline</span>
-            <button
-              onClick={handleManualRetry}
-              className="ml-1 p-0.5 rounded hover:bg-red-500/20 text-red-400 cursor-pointer"
-              title="Coba hubungi ulang database"
-            >
-              <RefreshCw className="w-3 h-3" />
-            </button>
-          </>
-        ) : (
-          <>
-            <RefreshCw className="w-3.5 h-3.5 text-amber-400 animate-spin" />
-            <span className="text-[10px] font-mono font-bold text-amber-400 uppercase tracking-wider">Connecting…</span>
-          </>
-        )}
-      </div>
-
+      {/* Cyber Bootstrap Loading Screen */}
       <AnimatePresence>
         {isAppLoading && (
           <LoadingScreen onComplete={() => {
@@ -808,15 +822,19 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      <div
+      {/* Real-time Flat Scroll Progress Indicator */}
+      <div 
         className="fixed top-0 left-0 h-[3.5px] bg-gradient-to-r from-brand-blue via-brand-cyan to-brand-purple z-[99999] transition-all duration-75"
         style={{ width: `${scrollProgress}%` }}
       />
 
+      {/* System Toasts Container */}
       <Toast toasts={toasts} onDismiss={handleDismissToast} />
 
+      {/* Absolute top grid mask decoration */}
       <div className="absolute top-0 inset-x-0 h-[1000px] bg-gradient-to-b from-brand-blue/15 to-transparent pointer-events-none z-0" />
-
+      
+      {/* Sticky Premium Navbar */}
       <Navbar
         currentSection={currentSection}
         onNavigate={handleNavigation}
@@ -827,6 +845,7 @@ export default function App() {
         onOpenLogin={() => handleNavigation('dashboard')}
       />
 
+      {/* DEVELOPER PLAYGROUND PREVIEW BAR */}
       <div className="fixed bottom-4 left-4 z-[40] flex flex-row gap-2 bg-slate-950/90 border border-white/15 p-2 rounded-xl backdrop-blur-md items-center">
         <span className="text-[9px] font-mono font-bold tracking-widest text-[#06b6d4] pl-2 uppercase">PLAYGROUND PREVIEW:</span>
         <button
@@ -857,10 +876,12 @@ export default function App() {
         </button>
       </div>
 
+      {/* Main Core View Content */}
       <main className="relative z-10 w-full min-h-screen">
         <AnimatePresence mode="wait">
-
+          
           {simulateView === '404' ? (
+            // --- 404 ERROR VIEW PAGE SIMULATOR ---
             <motion.div
               key="interior-404-simulation"
               initial={{ opacity: 0, scale: 0.97 }}
@@ -892,6 +913,7 @@ export default function App() {
             </motion.div>
 
           ) : simulateView === 'maintenance' ? (
+            // --- MAINTENANCE VIEW PAGE SIMULATOR ---
             <motion.div
               key="interior-maintenance-simulation"
               initial={{ opacity: 0, scale: 0.97 }}
@@ -922,6 +944,8 @@ export default function App() {
             </motion.div>
 
           ) : currentSection === 'dashboard' ? (
+            
+            // --- WORKSPACE VIEW INLINE VIEW SWITCHER ---
             <motion.div
               key="interior-dashboard-page"
               initial={{ opacity: 0, y: 30 }}
@@ -930,6 +954,7 @@ export default function App() {
               transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
               className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto py-8 mt-12 mb-20"
             >
+              {/* Back to Home Button */}
               <div className="mb-6 flex items-center justify-between">
                 <button
                   onClick={() => handleNavigation('beranda')}
@@ -938,7 +963,7 @@ export default function App() {
                   <ArrowLeft className="w-4 h-4 text-brand-cyan" />
                   <span>Kembali ke Website Utama</span>
                 </button>
-
+                
                 {isLoggedIn && (
                   <div className="flex items-center gap-1.5 text-xs text-slate-400 font-mono">
                     <UserCheck className="w-4 h-4 text-brand-teal" />
@@ -947,6 +972,7 @@ export default function App() {
                 )}
               </div>
 
+              {/* Master Dashboard Module */}
               <Dashboard
                 onLoginSuccess={handleLoginSuccess}
                 isLoggedIn={isLoggedIn}
@@ -979,6 +1005,8 @@ export default function App() {
               />
             </motion.div>
           ) : (
+            
+            // --- PRIMARY MARKETING WEBPAGE CONTENT ---
             <motion.div
               key="exterior-marketing-page"
               initial={{ opacity: 0 }}
@@ -986,37 +1014,49 @@ export default function App() {
               exit={{ opacity: 0 }}
               className="space-y-0"
             >
+              {/* Hero Banner Grid */}
               <Hero
                 onJoinClick={() => handleNavigation('dashboard')}
                 onExploreClick={() => handleNavigation('programs')}
               />
 
-              <Overview
-                onDiscoverProductsClick={() => handleNavigation('products')}
+              {/* Stats & Short Profile */}
+              <Overview 
+                onDiscoverProductsClick={() => handleNavigation('products')} 
                 membersCount={members.length}
                 productsCount={products.length}
                 summary={summary}
                 achievements={achievements}
               />
 
+              {/* Visi & Misi Cards Column */}
               <VisiMisi visiMisi={visiMisi || undefined} />
 
+              {/* Testimonials Alumni stories */}
               <Testimonials />
 
+              {/* Featured Syllabus Programs */}
               <Programs programs={programs} />
 
+              {/* Chronological Milestone Achievements Timeline */}
               <Timeline achievements={achievements} />
 
+              {/* Action Field Photos Grid */}
               <Gallery images={gallery} />
 
+              {/* Dynamic Information Feed Board */}
               <NewsSection news={news} generalInfo={generalInfo} />
 
+              {/* Interactive Activities Agenda Calendar */}
               <AgendaCalendar />
 
+              {/* Collaborative Outreach Services */}
               <CommunityService publicServices={publicServices} />
 
+              {/* Studen-Invented Creational Gallery */}
               <ProductsCatalog products={products} />
 
+              {/* Integrated Learning Hub Section (Pembelajaran) */}
               {isLoggedIn && (
                 <section id="learning" className="py-24 relative overflow-hidden bg-slate-950/20 border-t border-white/5">
                   <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -1025,8 +1065,10 @@ export default function App() {
                 </section>
               )}
 
+              {/* FAQs Accordions list */}
               <Faq />
 
+              {/* Interactive Quick Messages form Contact */}
               <ContactForm onAddToast={addToast} />
 
             </motion.div>
@@ -1034,8 +1076,10 @@ export default function App() {
         </AnimatePresence>
       </main>
 
+      {/* Global Glowing footer */}
       <Footer onNavigate={handleNavigation} />
 
+      {/* Dynamic Scroll To Top Button with neon trail */}
       <AnimatePresence>
         {showScrollTop && (
           <motion.button
@@ -1051,6 +1095,7 @@ export default function App() {
         )}
       </AnimatePresence>
 
+      {/* Floating Action Buttons trigger */}
       <FloatingActionButton whatsappNumber={summary?.whatsapp} />
     </div>
   );
