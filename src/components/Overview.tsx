@@ -182,7 +182,7 @@ export default function Overview({
                 </span>
                 
                 {/* Emblem Image with glowing frame */}
-                <div className={`w-28 h-28 mx-auto bg-slate-950 border border-brand-cyan/30 relative overflow-hidden group-hover:scale-105 transition-transform duration-500 shadow-lg shadow-brand-cyan/10 flex items-center justify-center ${customLogo ? 'rounded-2xl p-2' : 'rounded-full p-1'}`}>
+                <div className={`w-[134px] h-[134px] mx-auto bg-transparent border border-brand-cyan/30 relative overflow-hidden group-hover:scale-105 transition-transform duration-500 shadow-lg shadow-brand-cyan/10 flex items-center justify-center ${customLogo ? 'rounded-2xl p-2' : 'rounded-full p-1'}`}>
                   <img
                     src={customLogo || logoEmblem}
                     alt="Official Logo AEROB"
