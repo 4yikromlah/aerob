@@ -14,11 +14,11 @@ initDatabase().catch(err => {
 
 // Log incoming request paths to help debugging
 app.use((req, res, next) => {
-  console.log(`[Vercel Serverless Index] Incoming: ${req.method} ${req.url} (original: ${req.originalUrl})`);
+  console.log(`[Vercel Serverless] Incoming: ${req.method} ${req.url} (original: ${req.originalUrl})`);
   next();
 });
 
-// Register the same API router under /api and /
+// Mount the API router on both /api and / to handle different Vercel routing modes
 app.use('/api', apiRouter);
 app.use('/', apiRouter);
 
