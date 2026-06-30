@@ -196,8 +196,8 @@ router.get('/members', async (req, res) => {
       const rows = await sqlClient`SELECT * FROM members ORDER BY name ASC`;
       res.json(rows.map(parseMember));
     } catch (err) {
-      console.error("GET /members error:", err);
-      res.status(500).json({ error: "Failed to fetch members from Neon SQL" });
+      console.error("GET /members error, falling back to localStore:", err);
+      res.json(localStore.members);
     }
   } else {
     res.json(localStore.members);
@@ -273,8 +273,8 @@ router.get('/inventory', async (req, res) => {
       const rows = await sqlClient`SELECT * FROM inventory ORDER BY name ASC`;
       res.json(rows);
     } catch (err) {
-      console.error("GET /inventory error:", err);
-      res.status(500).json({ error: "Failed to fetch inventory" });
+      console.error("GET /inventory error, falling back to localStore:", err);
+      res.json(localStore.inventory);
     }
   } else {
     res.json(localStore.inventory);
@@ -349,8 +349,8 @@ router.get('/programs', async (req, res) => {
       const rows = await sqlClient`SELECT * FROM programs ORDER BY title ASC`;
       res.json(rows.map(parseProgram));
     } catch (err) {
-      console.error("GET /programs error:", err);
-      res.status(500).json({ error: "Failed to fetch programs" });
+      console.error("GET /programs error, falling back to localStore:", err);
+      res.json(localStore.programs);
     }
   } else {
     res.json(localStore.programs);
@@ -426,8 +426,8 @@ router.get('/gallery', async (req, res) => {
       const rows = await sqlClient`SELECT * FROM gallery ORDER BY date DESC`;
       res.json(rows.map(parseGallery));
     } catch (err) {
-      console.error("GET /gallery error:", err);
-      res.status(500).json({ error: "Failed to fetch gallery" });
+      console.error("GET /gallery error, falling back to localStore:", err);
+      res.json(localStore.gallery);
     }
   } else {
     res.json(localStore.gallery);
@@ -502,8 +502,8 @@ router.get('/news', async (req, res) => {
       const rows = await sqlClient`SELECT * FROM news ORDER BY date DESC`;
       res.json(rows.map(parseNews));
     } catch (err) {
-      console.error("GET /news error:", err);
-      res.status(500).json({ error: "Failed to fetch news" });
+      console.error("GET /news error, falling back to localStore:", err);
+      res.json(localStore.news);
     }
   } else {
     res.json(localStore.news);
@@ -579,8 +579,8 @@ router.get('/products', async (req, res) => {
       const rows = await sqlClient`SELECT * FROM products ORDER BY name ASC`;
       res.json(rows.map(parseProduct));
     } catch (err) {
-      console.error("GET /products error:", err);
-      res.status(500).json({ error: "Failed to fetch products" });
+      console.error("GET /products error, falling back to localStore:", err);
+      res.json(localStore.products);
     }
   } else {
     res.json(localStore.products);
@@ -656,8 +656,8 @@ router.get('/achievements', async (req, res) => {
       const rows = await sqlClient`SELECT * FROM achievements ORDER BY year DESC`;
       res.json(rows);
     } catch (err) {
-      console.error("GET /achievements error:", err);
-      res.status(500).json({ error: "Failed to fetch achievements" });
+      console.error("GET /achievements error, falling back to localStore:", err);
+      res.json(localStore.achievements);
     }
   } else {
     res.json(localStore.achievements);
@@ -713,8 +713,9 @@ router.get('/settings/:key', async (req, res) => {
         res.json(fallbackValue);
       }
     } catch (err) {
-      console.error(`GET /settings/${key} error:`, err);
-      res.status(500).json({ error: `Failed to fetch setting ${key}` });
+      console.error(`GET /settings/${key} error, falling back to localStore:`, err);
+      const val = localStore.settings[key] !== undefined ? localStore.settings[key] : null;
+      res.json(val);
     }
   } else {
     const val = localStore.settings[key] !== undefined ? localStore.settings[key] : null;
