@@ -1,18 +1,15 @@
-import { VercelRequest, VercelResponse } from '@vercel/node';
 import { createPool } from '@neondatabase/serverless';
 
 const pool = createPool(process.env.NEON_DATABASE_URL as string);
 
-// Liveness: function runs — return 200
-// Readiness: check DB connection is healthy
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: any, res: any) {
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET');
     return res.status(405).end('Method Not Allowed');
   }
 
   // Liveness quick response
-  if (req.query.type === 'liveness') {
+  if (req.query?.type === 'liveness') {
     return res.status(200).json({ ok: true, live: true, time: new Date().toISOString() });
   }
 
