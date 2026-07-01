@@ -11,7 +11,7 @@ import {
   PUBLIC_SERVICES 
 } from '../data/roboticsData';
 
-const databaseUrl = process.env.DATABASE_URL;
+const databaseUrl = process.env.DATABASE_URL || process.env.NEON_DATABASE_URL;
 
 export const isDbConnected = !!databaseUrl;
 
@@ -24,7 +24,7 @@ if (isDbConnected) {
     console.error("Error creating Neon client:", err);
   }
 } else {
-  console.warn("⚠️ DATABASE_URL is not defined. Falling back to local in-memory storage.");
+  console.warn("⚠️ DATABASE_URL or NEON_DATABASE_URL is not defined. Falling back to local in-memory storage.");
 }
 
 export { sqlClient };
