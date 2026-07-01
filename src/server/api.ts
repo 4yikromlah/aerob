@@ -1,7 +1,17 @@
 import { Router } from 'express';
-import { sqlClient, isDbConnected, localStore } from './db';
+import { sqlClient, isDbConnected, localStore, ensureDbInitialized } from './db';
 
 const router = Router();
+
+// Middleware to block requests until Neon DB tables are initialized
+router.use(async (req, res, next) => {
+  try {
+    await ensureDbInitialized();
+  } catch (err) {
+    console.error("Database initialization middleware failed:", err);
+  }
+  next();
+});
 
 // Helper to convert DB rows with stringified JSON into correct JS objects
 function parseMember(row: any) {

@@ -261,3 +261,28 @@ export async function initDatabase() {
     console.error("❌ Database initialization or seeding failed:", err);
   }
 }
+
+let isInitialized = false;
+let initPromise: Promise<void> | null = null;
+
+export async function ensureDbInitialized() {
+  if (!isDbConnected || !sqlClient) {
+    return;
+  }
+  if (isInitialized) {
+    return;
+  }
+  if (!initPromise) {
+    console.log("🚀 Starting database initialization and checking tables...");
+    initPromise = initDatabase().then(() => {
+      isInitialized = true;
+      console.log("🚀 Database initialization complete!");
+    }).catch(err => {
+      console.error("❌ Database initialization failed inside ensureDbInitialized:", err);
+      initPromise = null; // Reset to allow retry on next request
+      throw err;
+    });
+  }
+  await initPromise;
+}
+
