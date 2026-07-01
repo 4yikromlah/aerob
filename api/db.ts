@@ -1,10 +1,9 @@
-import { VercelRequest, VercelResponse } from '@vercel/node';
 import { createPool } from '@neondatabase/serverless';
 
 const pool = createPool(process.env.NEON_DATABASE_URL as string);
 
 // Utility: parse id from query or body
-function getIdFromReq(req: VercelRequest) {
+function getIdFromReq(req: any) {
   return (req.query?.id as string) || (req.body && (req.body.id as string)) || null;
 }
 
@@ -18,7 +17,7 @@ async function query(sql: string, params: any[] = []) {
   }
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: any, res: any) {
   // CRUD for `notes` table:
   // CREATE: POST /api/db  { title, content }
   // READ list: GET /api/db
