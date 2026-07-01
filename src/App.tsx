@@ -84,20 +84,29 @@ export default function App() {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
-  // CRUD State Collections initialized from defaults (fresh data is loaded dynamically from Neon database)
-  const [members, setMembers] = useState<Member[]>(INITIAL_MEMBERS);
-  const [inventory, setInventory] = useState<InventoryItem[]>(INITIAL_INVENTORY);
-  const [programs, setPrograms] = useState<Program[]>(PROGRAMS_DATA);
-  const [gallery, setGallery] = useState<ActivityImage[]>(GALLERY_IMGS);
-  const [news, setNews] = useState<NewsItem[]>(NEWS_DATA);
-  const [products, setProducts] = useState<ProductItem[]>(PRODUCTS_DATA);
+  // CRUD State Collections initialized as empty (fresh data is loaded dynamically from Neon database)
+  const [members, setMembers] = useState<Member[]>([]);
+  const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [programs, setPrograms] = useState<Program[]>([]);
+  const [gallery, setGallery] = useState<ActivityImage[]>([]);
+  const [news, setNews] = useState<NewsItem[]>([]);
+  const [products, setProducts] = useState<ProductItem[]>([]);
 
   // Editable/Customizable Landing Page Site Settings & Content
-  const [summary, setSummary] = useState(EXTRACURRICULAR_PROFILE);
-  const [achievements, setAchievements] = useState<any[]>(GENERAL_ACHIEVEMENTS);
+  const [summary, setSummary] = useState<any>({
+    title: 'AEROB',
+    subtitle: 'Ekstrakurikuler Robotika',
+    description: 'Wadah kreativitas teknologi robotika',
+    established: '',
+    mentor: '',
+    schedule: '',
+    location: '',
+    stats: { members: 0, products: 0, inventory: 0, achievements: 0 }
+  });
+  const [achievements, setAchievements] = useState<any[]>([]);
   const [visiMisi, setVisiMisi] = useState<any>(null);
-  const [generalInfo, setGeneralInfo] = useState<string>("📢 INFO AKTIF: Kunjungan industri dan pameran karya robotika sasis pintar SMK Unggulan Teknologi akan dilangsungkan serentak pada tanggal 12 Juli 2026. Persiapkan modul line follower dan robot soccer roda Anda!");
-  const [publicServices, setPublicServices] = useState<any[]>(PUBLIC_SERVICES);
+  const [generalInfo, setGeneralInfo] = useState<string>("📢 Belum ada pengumuman aktif.");
+  const [publicServices, setPublicServices] = useState<any[]>([]);
 
   // --- NEON SQL DATABASE DYNAMIC FETCHERS & SYNC HANDLERS ---
   useEffect(() => {

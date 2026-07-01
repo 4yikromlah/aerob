@@ -31,18 +31,27 @@ export { sqlClient };
 
 // In-memory fallbacks when DB is not connected
 export const localStore = {
-  members: [...INITIAL_MEMBERS],
-  inventory: [...INITIAL_INVENTORY],
-  programs: [...PROGRAMS_DATA],
-  gallery: [...GALLERY_IMGS],
-  news: [...NEWS_DATA],
-  products: [...PRODUCTS_DATA],
-  achievements: [...GENERAL_ACHIEVEMENTS],
+  members: [] as any[],
+  inventory: [] as any[],
+  programs: [] as any[],
+  gallery: [] as any[],
+  news: [] as any[],
+  products: [] as any[],
+  achievements: [] as any[],
   settings: {
-    profile: EXTRACURRICULAR_PROFILE,
-    public_services: PUBLIC_SERVICES,
+    profile: {
+      title: 'AEROB',
+      subtitle: 'Ekstrakurikuler Robotika',
+      description: 'Wadah kreativitas teknologi robotika',
+      established: '',
+      mentor: '',
+      schedule: '',
+      location: '',
+      stats: { members: 0, products: 0, inventory: 0, achievements: 0 }
+    },
+    public_services: [] as any[],
     visimisi: null as any,
-    general_info: "📢 INFO AKTIF: Kunjungan industri dan pameran karya robotika sasis pintar SMK Unggulan Teknologi akan dilangsungkan serentak pada tanggal 12 Juli 2026. Persiapkan modul line follower dan robot soccer roda Anda!",
+    general_info: "📢 Belum ada pengumuman aktif.",
     background: 'default-robot',
     primary_color: '#06B6D4',
     secondary_color: '#2563EB',
